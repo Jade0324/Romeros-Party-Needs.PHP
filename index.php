@@ -1,52 +1,8 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Romero's Party Needs | Home</title>
-
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="assets/css/style.css" />
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg sticky-top site-nav">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Romero's Party Needs</a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="index.html">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="services.html"
-                >Services &amp; Rentals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="about.html">About Us</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="contact.html">Contact</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+<?php
+$pageTitle = "About Us | Romero's Party Needs";
+$activePage = "about";
+require_once 'includes/header.php';
+?>
 
     <div class="awning awning--sm" aria-hidden="true"></div>
 
@@ -152,16 +108,4 @@
       </div>
     </section>
 
-    <footer class="site-footer">
-      <div class="container">
-        <p class="mb-0">
-          &copy; 2026 Romero's Party Needs. All Rights Reserved.
-        </p>
-      </div>
-    </footer>
-
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/script.js"></script>
-  </body>
-</html>
+<?php require_once 'includes/footer.php'; ?>
