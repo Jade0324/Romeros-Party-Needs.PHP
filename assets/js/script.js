@@ -3,7 +3,7 @@ $(document).ready(function () {
   // Kept as one deliberate moment rather than animating every element.
   $(".hero-content").addClass("is-visible");
 
-  // Contact form validation — only runs on contact.html, since that's the
+  // Contact form validation — only runs on contact.php, since that's the
   // only page with #contactForm on it.
   var $form = $("#contactForm");
   if ($form.length) {

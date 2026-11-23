@@ -16,10 +16,10 @@ require_once 'includes/header.php';
             celebration needs.
           </p>
           <div class="hero-actions">
-            <a href="services.html" class="btn-primary"
+            <a href="services.php" class="btn-primary"
               >See rentals &amp; services</a
             >
-            <a href="about.html" class="btn-ghost">Our story</a>
+            <a href="about.php" class="btn-ghost">Our story</a>
           </div>
           <div class="hero-stats">
             <span class="stat-chip stat-chip--blue">10+ years</span>
