@@ -4,7 +4,7 @@ $activePage = "home";
 require_once 'includes/header.php';
 ?>
 
-    <div class="awning awning--sm" aria-hidden="true"></div>
+    
 
     <header class="hero">
       <div class="container hero-grid">

@@ -1,5 +1,12 @@
 <?php
-// Expects $conn (from db.php) to already exist before this is included.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
 
 $signupSubmitted = false;
 $signupSuccess = false;

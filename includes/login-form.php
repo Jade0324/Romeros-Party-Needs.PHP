@@ -1,10 +1,11 @@
 <?php
-// Expects $conn (from db.php) to already exist before this is included.
-// Also expects session_start() to have already run — header.php handles
-// that, but header.php is required AFTER this file, so we start it here
-// too (guarded, so it won't double-start).
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
 }
 
 $loginSubmitted = false;
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submit'])) {
         if (!$user || !password_verify($password, $user['password'])) {
             $loginError = "Invalid email or password.";
         } else {
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             header("Location: index.php");

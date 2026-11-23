@@ -124,6 +124,8 @@ a {
   display: inline-block;
   background: var(--marigold);
   color: var(--teal-dark);
+  border: none;
+  cursor: pointer;
   font-weight: 600;
   font-size: 0.98rem;
   padding: 0.75rem 1.6rem;
@@ -237,30 +239,12 @@ a {
   margin-bottom: 1rem;
 }
 
-@media (max-width: 767px) {
-  .offering {
-    border-left: none;
-    border-top: 1px solid rgba(36, 31, 27, 0.14);
-    padding: 1.75rem 0 0;
-    margin-top: 1.75rem;
-  }
-  .offering:first-child {
-    border-top: none;
-    padding-top: 0;
-    margin-top: 0;
-  }
-}
-
 /* ==========================================================================
    Interior page header (services / about / contact)
    ========================================================================== */
 
 .page-header {
   background: var(--teal);
-}
-
-.awning--sm {
-  height: 40px;
 }
 
 .page-header-content {
@@ -294,17 +278,35 @@ a {
   margin: 3rem 0 1.75rem;
 }
 
-.offerings-row--4 .offering,
-.offerings-row--3 .offering {
-  flex-basis: 200px;
+.offerings {
+  padding-bottom: 2.5rem;
+}
+
+.offerings-row--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.offerings-row--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 991px) {
+  .offerings-row--4,
+  .offerings-row--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 575px) {
+  .offerings-row--4,
+  .offerings-row--3 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .offerings--alt {
   background: #f0e8d6;
-}
-
-.offerings--alt .offerings {
-  padding-top: 0.5rem;
+  padding: 0.5rem 0 4rem;
 }
 
 /* ==========================================================================
@@ -343,7 +345,7 @@ a {
 }
 
 .mini-gallery--tight {
-  padding: 0 1rem 4rem;
+  padding: 1.5rem 1rem 4rem;
 }
 
 .section-label--center {
@@ -396,7 +398,7 @@ a {
 
 .partner {
   padding: 1rem 1rem 4rem;
-  max-width: 68ch;
+  max-width: 900px;
 }
 
 .partner-row {
@@ -407,9 +409,10 @@ a {
 }
 
 .partner-photos {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
-  flex: 1 1 260px;
+  flex: 1 1 320px;
 }
 
 .partner-photos img {

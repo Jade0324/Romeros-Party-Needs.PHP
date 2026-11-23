@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
             // Prepared statement — keeps user input out of the raw SQL string,
             // which is what protects this against SQL injection.
             /** @var mysqli $conn */
-            $stmt = mysqli_prepare($conn, "INSERT INTO inquiries (name, email, inquiry) VALUES (?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sss", $name, $email, $inquiryText);
+            $stmt = mysqli_prepare($conn, "INSERT INTO inquiries (name, email, phone, event_date, inquiry) VALUES (?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sssss", $name, $email, $phone, $eventDate, $message);
 
             if (mysqli_stmt_execute($stmt)) {
                 $formSuccess = true;
