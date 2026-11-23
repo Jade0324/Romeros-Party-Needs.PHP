@@ -8,7 +8,7 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
+  
   <div class="container page-header-content">
     <h1 class="page-title">Log in</h1>
     <p class="page-sub">Welcome back.</p>

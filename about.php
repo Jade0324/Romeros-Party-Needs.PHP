@@ -5,7 +5,7 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
+  
   <div class="container page-header-content">
     <h1 class="page-title">About us</h1>
     <p class="page-sub">A family business, built one event at a time.</p>

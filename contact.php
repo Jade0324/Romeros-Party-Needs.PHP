@@ -8,7 +8,7 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
+  
   <div class="container page-header-content">
     <h1 class="page-title">Get in touch</h1>
     <p class="page-sub">
@@ -36,33 +36,33 @@ require_once 'includes/header.php';
     <div class="form-row">
       <label for="name">Name</label>
       <input type="text" id="name" name="name" required
-             value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" />
+        value="<?php echo (isset($_POST['name']) && !$formSuccess) ? htmlspecialchars($_POST['name']) : ''; ?>" />
       <span class="field-error" data-for="name">Please enter your name.</span>
     </div>
 
     <div class="form-row">
       <label for="email">Email</label>
       <input type="email" id="email" name="email" required
-             value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" />
+        value="<?php echo (isset($_POST['email']) && !$formSuccess) ? htmlspecialchars($_POST['email']) : ''; ?>" />
       <span class="field-error" data-for="email">Please enter a valid email address.</span>
     </div>
 
     <div class="form-row">
       <label for="phone">Phone</label>
       <input type="tel" id="phone" name="phone"
-             value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>" />
+        value="<?php echo (isset($_POST['phone']) && !$formSuccess) ? htmlspecialchars($_POST['phone']) : ''; ?>" />
     </div>
 
     <div class="form-row">
       <label for="eventDate">Event date</label>
       <input type="date" id="eventDate" name="eventDate" required
-             value="<?php echo isset($_POST['eventDate']) ? htmlspecialchars($_POST['eventDate']) : ''; ?>" />
+        value="<?php echo (isset($_POST['eventDate']) && !$formSuccess) ? htmlspecialchars($_POST['eventDate']) : ''; ?>" />
       <span class="field-error" data-for="eventDate">Please select your event date.</span>
     </div>
 
     <div class="form-row">
       <label for="message">What do you need?</label>
-      <textarea id="message" name="message" rows="5" required><?php echo isset($_POST['message']) ? htmlspecialchars($_POST['message']) : ''; ?></textarea>
+      <textarea id="message" name="message" rows="5" required><?php echo (isset($_POST['message']) && !$formSuccess) ? htmlspecialchars($_POST['message']) : ''; ?></textarea>
       <span class="field-error" data-for="message">Please tell us a bit about your event.</span>
     </div>
 
