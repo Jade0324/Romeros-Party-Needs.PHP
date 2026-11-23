@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup_submit'])) {
         $signupError = "Passwords don't match.";
     } else {
         // Check whether that email is already registered before inserting.
+        /** @var mysqli $conn */
         $checkStmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email = ?");
         mysqli_stmt_bind_param($checkStmt, "s", $email);
         mysqli_stmt_execute($checkStmt);
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup_submit'])) {
             // Never store the raw password — password_hash() one-way hashes it.
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+            /** @var mysqli $conn */
             $insertStmt = mysqli_prepare($conn, "INSERT INTO users (email, password) VALUES (?, ?)");
             mysqli_stmt_bind_param($insertStmt, "ss", $email, $hashedPassword);
 

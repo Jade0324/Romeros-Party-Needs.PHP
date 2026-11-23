@@ -1,6 +1,6 @@
 <?php
-$pageTitle = "About Us | Romero's Party Needs";
-$activePage = "about";
+$pageTitle = "Services & Rentals | Romero's Party Needs";
+$activePage = "services";
 require_once 'includes/header.php';
 ?>
 

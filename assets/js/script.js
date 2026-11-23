@@ -1,10 +1,9 @@
 $(document).ready(function () {
   // Single page-load reveal for the hero content (title, subtitle, button).
   // Kept as one deliberate moment rather than animating every element.
-  $(".hero-content").addClass("is-visible");
+  $(".hero-copy").addClass("is-visible");
 
-  // Contact form validation — only runs on contact.php, since that's the
-  // only page with #contactForm on it.
+// Contact form validation — only runs on contact.php
   var $form = $("#contactForm");
   if ($form.length) {
     var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,6 +46,7 @@ $(document).ready(function () {
   if ($signupForm.length) {
     $signupForm.on("submit", function (e) {
       var isValid = true;
+      var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       var $password = $("#password");
       var $confirm = $("#confirm_password");
 
@@ -55,6 +55,10 @@ $(document).ready(function () {
         var $row = $field.closest(".form-row");
         var value = $.trim($field.val());
         var fieldIsValid = value.length >= (parseInt($field.attr("minlength"), 10) || 0) && value.length > 0;
+
+        if (fieldIsValid && $field.attr("type") === "email") {
+          fieldIsValid = emailPattern.test(value);
+        }
 
         $row.toggleClass("has-error", !fieldIsValid);
         if (!fieldIsValid) {
