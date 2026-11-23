@@ -1,6 +1,6 @@
 <?php
-$pageTitle = "About Us | Romero's Party Needs";
-$activePage = "about";
+$pageTitle = "Services & Rentals | Romero's Party Needs";
+$activePage = "services";
 require_once 'includes/header.php';
 ?>
 
@@ -139,7 +139,7 @@ require_once 'includes/header.php';
           Tell us your date and headcount, and we'll put together a package that
           fits.
         </p>
-        <a href="contact.html" class="btn-primary">Get in touch</a>
+        <a href="contact.php" class="btn-primary">Get in touch</a>
       </div>
     </section>
 

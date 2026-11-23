@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submit'])) {
     if ($email === '' || $password === '') {
         $loginError = "Please enter both your email and password.";
     } else {
+        /** @var mysqli $conn */
         $stmt = mysqli_prepare($conn, "SELECT id, email, password FROM users WHERE email = ?");
         mysqli_stmt_bind_param($stmt, "s", $email);
         mysqli_stmt_execute($stmt);

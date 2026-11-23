@@ -15,31 +15,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
     $eventDate = trim(strip_tags($_POST['eventDate'] ?? ''));
     $message = trim(strip_tags($_POST['message'] ?? ''));
 
-    if ($name === '' || $email === '' || $message === '') {
-        $formError = "Please fill in your name, email, and message.";
+    if ($name === '' || $email === '' || $eventDate === '' || $message === '') {
+        $formError = "Please fill in your name, email, event date, and message.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $formError = "That email address doesn't look valid.";
     } else {
-        // Fold phone/event date into the inquiry text since the table
-        // only has a single "inquiry" column to work with.
-        $inquiryText = $message;
-        if ($eventDate !== '') {
-            $inquiryText = "Event date: $eventDate\n" . $inquiryText;
-        }
-        if ($phone !== '') {
-            $inquiryText = "Phone: $phone\n" . $inquiryText;
+        $dateParts = explode('-', $eventDate);
+
+        $validDateFormat = preg_match('/^\d{4}-\d{2}-\d{2}$/', $eventDate);
+        $validCalendarDate = false;
+
+        if ($validDateFormat && count($dateParts) === 3) {
+            $validCalendarDate = checkdate(
+                (int) $dateParts[1],
+                (int) $dateParts[2],
+                (int) $dateParts[0]
+            );
         }
 
-        // Prepared statement — keeps user input out of the raw SQL string,
-        // which is what protects this against SQL injection.
-        $stmt = mysqli_prepare($conn, "INSERT INTO inquiries (name, email, inquiry) VALUES (?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "sss", $name, $email, $inquiryText);
-
-        if (mysqli_stmt_execute($stmt)) {
-            $formSuccess = true;
+        if (!$validCalendarDate) {
+            $formError = "That event date doesn't look valid.";
         } else {
-            $formError = "Something went wrong saving your message. Please try again.";
+            // Prepared statement — keeps user input out of the raw SQL string,
+            // which is what protects this against SQL injection.
+            /** @var mysqli $conn */
+            $stmt = mysqli_prepare($conn, "INSERT INTO inquiries (name, email, inquiry) VALUES (?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sss", $name, $email, $inquiryText);
+
+            if (mysqli_stmt_execute($stmt)) {
+                $formSuccess = true;
+            } else {
+                $formError = "Something went wrong saving your message. Please try again.";
+            }
+            mysqli_stmt_close($stmt);
         }
-        mysqli_stmt_close($stmt);
     }
 }
