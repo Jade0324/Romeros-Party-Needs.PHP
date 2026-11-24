@@ -2,6 +2,11 @@
 // Expects $conn (from db.php) to already exist before this is included.
 /** @var mysqli $conn  Tells the code editor where $conn comes from. */
 
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
 $loginSubmitted = false;
 $loginError = "";
 

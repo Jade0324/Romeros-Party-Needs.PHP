@@ -3,7 +3,7 @@
 This page maps every work package on the project's WBS / Kanban board to **what was built**, **where it lives**, and **how it was verified**. Use it to move cards and to back up the final report.
 
 **Verification key**
-* **Auto:** covered by `tests/run-tests.php` (100 automated checks, all passing as of Nov 24, 2026).
+* **Auto:** covered by `tests/run-tests.php` (101 automated checks, all passing as of Nov 24, 2026).
 * **Shot:** screenshot in [`docs/screenshots/`](screenshots/) (see [SCREENSHOTS.md](SCREENSHOTS.md)).
 * **Manual:** item in the checklist in [GETTING-STARTED.md](../GETTING-STARTED.md#full-test-checklist).
 
@@ -35,7 +35,7 @@ This page maps every work package on the project's WBS / Kanban board to **what 
 |---|---|---|---|
 | **1.3.1** Database-Driven Services & Rentals Catalog (#10) | Categories, items (with photos), prices and services all loaded from the database; "check availability for a date" | `services.php`, `assets/js/services.js`, `api/availability.php` | Auto ("new item shows on the public Services page") · Shot 02 |
 | **1.3.2** Event Booking Submission Form (#11) | Availability calendar, live stock per date, fully-booked services disabled, running total + 30% down payment, client + server validation, transaction locking against double-booking; admins can book for walk-in customers | `book.php`, `assets/js/booking.js`, `includes/booking-functions.php`, `api/calendar.php` | Auto: section "Customer: catalog & booking" (21 checks: over-booking, full service, blocked date, notice period, times, empty, totals, stock decrement…) · Shot 03, 14 |
-| **1.3.3** Customer Booking Management Page (#12) | My bookings dashboard; booking details with timeline, payments and appointments; **edit pending bookings**; cancel (≥3 days before); print slip; appointments; profile and password | `account.php`, `booking.php`, `book.php?edit=`, `appointment.php` | Auto: section "Customer: managing a booking" (19 checks) · Shot 04, 05, 06, 07 |
+| **1.3.3** Customer Booking Management Page (#12) | My bookings dashboard; booking details with timeline, payments and appointments; **edit pending bookings**; cancel (≥3 days before); print slip; appointments; profile and password | `account.php`, `booking.php`, `book.php?edit=`, `appointment.php` | Auto: section "Customer: managing a booking" (20 checks) · Shot 04, 05, 06, 07 |
 
 ## 1.4 Administrator Control Panel (Kanban #13)
 
@@ -51,7 +51,7 @@ This page maps every work package on the project's WBS / Kanban board to **what 
 | WBS | Deliverable | Where | Verified |
 |---|---|---|---|
 | **1.5.1** Live Server Database Setup & Migration | Hosting-safe SQL file, numbered migrations for upgrading a live database without losing data, per-server settings file (`db.local.php`), production mode that hides errors, step-by-step guide | `db_setup/db-live.sql`, `db_setup/migrations/`, `includes/db.local.example.php`, [DEPLOYMENT.md](DEPLOYMENT.md) | `db-live.sql` imported into a differently-named database (13 tables) |
-| **1.5.2** Website Deployment & Final Testing | Automated end-to-end test suite; Admin → System health check for the live server; live testing checklist | `tests/run-tests.php`, `admin/system.php`, [DEPLOYMENT.md §10](DEPLOYMENT.md#step-10-final-testing-on-the-live-site) | Auto: 100/100 passing locally · Shot 13. **Live run pending the hosting account.** |
+| **1.5.2** Website Deployment & Final Testing | Automated end-to-end test suite; Admin → System health check for the live server; live testing checklist | `tests/run-tests.php`, `admin/system.php`, [DEPLOYMENT.md §10](DEPLOYMENT.md#step-10-final-testing-on-the-live-site) | Auto: 101/101 passing locally · Shot 13. **Live run pending the hosting account.** |
 
 ## 1.6 Project Documentation & Final Presentation (Kanban #21)
 

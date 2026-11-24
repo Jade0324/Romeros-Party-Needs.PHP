@@ -102,7 +102,6 @@ function booking_card(array $b): void { ?>
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
   <div class="container page-header-content">
     <h1 class="page-title">Hi, <?php echo e(explode(' ', $me['full_name'])[0]); ?></h1>
     <p class="page-sub">Your events, appointments and messages with us — all in one place.</p>

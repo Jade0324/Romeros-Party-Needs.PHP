@@ -17,7 +17,7 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
+  
   <div class="container page-header-content">
     <h1 class="page-title">Get in touch</h1>
     <p class="page-sub">
@@ -66,8 +66,9 @@ require_once 'includes/header.php';
     </div>
 
     <div class="form-row">
-      <label for="eventDate">Event date <span class="label-hint">(if you have one)</span></label>
-      <input type="date" id="eventDate" name="eventDate" value="<?php echo old('eventDate'); ?>" />
+      <label for="eventDate">Event date</label>
+      <input type="date" id="eventDate" name="eventDate" required value="<?php echo old('eventDate'); ?>" />
+      <span class="field-error" data-for="eventDate">Please select your event date.</span>
     </div>
 
     <div class="form-row">

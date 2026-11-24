@@ -89,7 +89,7 @@ With Apache and MySQL running:
 ```
 C:\xampp\php\php.exe tests\run-tests.php --reset
 ```
-Runs 100 end-to-end checks as a guest, customers and an admin: stock limits, fully booked services, edits, payments, roles, uploads, access guards. It **resets the database to the demo data** before and after, so never point it at a live site.
+Runs 101 end-to-end checks as a guest, customers and an admin: stock limits, fully booked services, edits, payments, roles, uploads, access guards. It **resets the database to the demo data** before and after, so never point it at a live site.
 
 ## Demo Accounts
 

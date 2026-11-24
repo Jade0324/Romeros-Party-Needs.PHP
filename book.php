@@ -239,7 +239,6 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
   <div class="container page-header-content">
     <?php if ($editing): ?>
       <p class="page-eyebrow"><a href="<?php echo is_admin() ? 'admin/booking.php?id=' . $excludeId : 'booking.php?ref=' . urlencode($editing['reference']); ?>">&larr; Back to booking</a></p>

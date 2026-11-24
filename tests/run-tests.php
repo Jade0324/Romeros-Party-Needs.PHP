@@ -288,7 +288,9 @@ $avail = json_decode($g->get("api/availability.php?date=$D6")->body, true);
 test('cancelling releases the items (Tiffany back to 20)', ($avail['items'][2]['available'] ?? null) === 20);
 test('cancelling cancels its appointments', (int) q("SELECT COUNT(*) FROM appointments WHERE booking_id = ? AND status = 'scheduled'", "i", [$bid]) === 0);
 
-$juan->post('contact.php', ['contact_submit' => 1, 'name' => 'Juan', 'email' => 'juan@example.com', 'message' => 'Automated test message']);
+$juan->post('contact.php', ['contact_submit' => 1, 'name' => 'Juan', 'email' => 'juan@example.com', 'message' => 'No date given']);
+test('contact form requires an event date', $juan->has('event date') && !q("SELECT COUNT(*) FROM inquiries WHERE inquiry = 'No date given'"));
+$juan->post('contact.php', ['contact_submit' => 1, 'name' => 'Juan', 'email' => 'juan@example.com', 'eventDate' => $D30, 'message' => 'Automated test message']);
 test('contact form saves and links to the account', $juan->has('your message has been sent') && (int) q("SELECT user_id FROM inquiries WHERE inquiry = 'Automated test message'") === 2);
 
 $new = new Browser($base);

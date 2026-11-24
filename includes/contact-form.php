@@ -18,11 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
     $message = post_str('message');
     $eventDate = $eventDateRaw !== '' ? clean_date($eventDateRaw) : null;
 
-    if ($name === '' || $email === '' || $message === '') {
-        $formError = "Please fill in your name, email, and message.";
+    // Event date is required (team decision, PR #2) so every inquiry can be
+    // checked against the calendar.
+    if ($name === '' || $email === '' || $eventDateRaw === '' || $message === '') {
+        $formError = "Please fill in your name, email, event date, and message.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $formError = "That email address doesn't look valid.";
-    } elseif ($eventDateRaw !== '' && !$eventDate) {
+    } elseif (!$eventDate) {
         $formError = "That event date doesn't look valid.";
     } else {
         // Link the inquiry to the account if they're logged in, so the

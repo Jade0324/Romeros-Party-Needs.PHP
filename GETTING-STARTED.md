@@ -64,7 +64,7 @@ If you see the home page with the **Book now** button, you're done. 🎉
 
 ### Step 6 (optional): Check everything automatically
 * Log in as the admin (below) and open **Admin → System**. It should say **0 problems**.
-* Or run the automated test suite (100 checks, about 30 seconds) from a terminal in the project folder:
+* Or run the automated test suite (101 checks, about 30 seconds) from a terminal in the project folder:
   ```
   C:\xampp\php\php.exe tests\run-tests.php --reset
   ```

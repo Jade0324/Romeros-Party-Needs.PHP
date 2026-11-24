@@ -37,7 +37,6 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
   <div class="container page-header-content">
     <p class="page-eyebrow"><a href="account.php">&larr; My bookings</a></p>
     <h1 class="page-title">Booking <?php echo e($booking['reference']); ?></h1>

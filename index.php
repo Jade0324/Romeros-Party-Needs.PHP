@@ -1,11 +1,11 @@
 <?php
 require_once 'includes/db.php';
-$pageTitle = "Romero's Party Needs | Party Rentals & Event Services";
+$pageTitle = "Home | Romero's Party Needs";
 $activePage = "home";
 require_once 'includes/header.php';
 ?>
 
-    <div class="awning awning--sm" aria-hidden="true"></div>
+    
 
     <header class="hero">
       <div class="container hero-grid">
@@ -18,7 +18,8 @@ require_once 'includes/header.php';
           </p>
           <div class="hero-actions">
             <a href="book.php" class="btn-primary">Book your event</a>
-            <a href="services.php" class="btn-ghost">See rentals &amp; prices</a>
+            <a href="services.php" class="btn-ghost">See rentals &amp; services</a>
+            <a href="about.php" class="btn-ghost">Our story</a>
           </div>
           <div class="hero-stats">
             <span class="stat-chip stat-chip--blue">10+ years</span>

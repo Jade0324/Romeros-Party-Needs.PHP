@@ -336,7 +336,7 @@ Payment status is derived (not stored): **unpaid** (0), **partial** (< total), *
 | user_id | INT UNSIGNED | FK → users.id, SET NULL, *NULL* | Filled in when sent while logged in |
 | name / email | VARCHAR | required, valid email | |
 | phone | VARCHAR(30) | *NULL* | |
-| event_date | DATE | *NULL* | |
+| event_date | DATE | *NULL* in the table; **required** by the Contact form | Lets the team check the date against the calendar |
 | inquiry | TEXT | required | Message |
 | status | ENUM('new','replied','closed') | default new | |
 | created_at | TIMESTAMP | auto | |

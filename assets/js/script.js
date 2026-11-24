@@ -6,7 +6,7 @@
 $(document).ready(function () {
   // Single page-load reveal for the hero content (title, subtitle, button).
   // Kept as one deliberate moment rather than animating every element.
-  $(".hero-content").addClass("is-visible");
+  $(".hero-copy").addClass("is-visible");
 
   // ------------------------------------------------------------------------
   // Form validation for any <form class="js-validate"> (contact, signup,

@@ -14,7 +14,7 @@ require_once 'includes/header.php';
 ?>
 
 <header class="page-header">
-  <div class="awning awning--sm" aria-hidden="true"></div>
+  
   <div class="container page-header-content">
     <h1 class="page-title">Create an account</h1>
     <p class="page-sub">Sign up to book rentals and services, and track every booking in one place.</p>
@@ -64,8 +64,8 @@ require_once 'includes/header.php';
       <span class="field-error" data-for="confirm_password">Passwords must match.</span>
     </div>
 
-    <button type="submit" class="btn-primary">Sign up</button>
-  </form>
+      <button type="submit" class="btn-primary">Sign up</button>
+    </form>
 
   <p style="margin-top: 1.5rem; font-size: 0.95rem;">
     Already have an account? <a href="login.php<?php echo $next ? '?next=' . urlencode($next) : ''; ?>">Log in</a>.
