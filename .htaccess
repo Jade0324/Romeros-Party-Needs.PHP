@@ -1,0 +1,13 @@
+# Don't list folder contents (e.g. /assets/img/) when there's no index page.
+Options -Indexes
+
+# Hide files that should never be downloaded from the live site.
+<FilesMatch "(^\.|\.(sql|md|log|sh|bak|example\.php)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>

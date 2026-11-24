@@ -1,4 +1,5 @@
 <?php
+require_once 'includes/db.php';
 $pageTitle = "About Us | Romero's Party Needs";
 $activePage = "about";
 require_once 'includes/header.php';

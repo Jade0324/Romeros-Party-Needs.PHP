@@ -1,106 +1,103 @@
+// ==========================================================================
+// Site-wide jQuery: hero reveal, form validation, confirm prompts, flash
+// messages. Page-specific code lives in booking.js, appointment.js and
+// services.js (loaded only on those pages via $pageScripts).
+// ==========================================================================
 $(document).ready(function () {
   // Single page-load reveal for the hero content (title, subtitle, button).
   // Kept as one deliberate moment rather than animating every element.
   $(".hero-content").addClass("is-visible");
 
-  // Contact form validation — only runs on contact.html, since that's the
-  // only page with #contactForm on it.
-  var $form = $("#contactForm");
-  if ($form.length) {
-    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // ------------------------------------------------------------------------
+  // Form validation for any <form class="js-validate"> (contact, signup,
+  // login). Checks required fields, email format, minlength, and
+  // data-match="#otherField" (for "confirm password").
+  // PHP validates everything again on the server — this is just faster
+  // feedback for the user.
+  // ------------------------------------------------------------------------
+  var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  $("form.js-validate").each(function () {
+    var $form = $(this);
 
     $form.on("submit", function (e) {
       var isValid = true;
 
       $form.find("[required]").each(function () {
         var $field = $(this);
-        var $row = $field.closest(".form-row");
         var value = $.trim($field.val());
-        var fieldIsValid = value.length > 0;
+        var minLength = parseInt($field.attr("minlength"), 10) || 0;
+        var fieldIsValid = value.length > 0 && value.length >= minLength;
 
         if (fieldIsValid && $field.attr("type") === "email") {
           fieldIsValid = emailPattern.test(value);
         }
+        if (fieldIsValid && $field.data("match")) {
+          fieldIsValid = value === $($field.data("match")).val();
+        }
 
-        $row.toggleClass("has-error", !fieldIsValid);
+        $field.closest(".form-row").toggleClass("has-error", !fieldIsValid);
         if (!fieldIsValid) {
           isValid = false;
         }
       });
 
       // Only block the submit when something's actually wrong. If it's
-      // valid, let the browser POST to contact.php as normal — PHP
-      // handles saving it and showing the success/error message.
+      // valid, let the browser POST as normal — PHP handles saving it and
+      // showing the success/error message.
       if (!isValid) {
         e.preventDefault();
+        $form.find(".has-error :input").first().trigger("focus");
       }
     });
 
     // Clear a field's error state as soon as the person starts fixing it.
-    $form.on("input", "input, textarea", function () {
+    $form.on("input", "input, textarea, select", function () {
       $(this).closest(".form-row").removeClass("has-error");
     });
-  }
+  });
 
-  // Signup form validation — only runs on signup.php.
-  var $signupForm = $("#signupForm");
-  if ($signupForm.length) {
-    $signupForm.on("submit", function (e) {
-      var isValid = true;
-      var $password = $("#password");
-      var $confirm = $("#confirm_password");
+  // ------------------------------------------------------------------------
+  // "Are you sure?" prompts. Put data-confirm="message" on a form (asks on
+  // submit) or on a single submit button (asks only for that button).
+  // ------------------------------------------------------------------------
+  $(document).on("click", "button[data-confirm]", function (e) {
+    if (!window.confirm($(this).data("confirm"))) {
+      e.preventDefault();
+    }
+  });
+  $(document).on("submit", "form[data-confirm]", function (e) {
+    if (!window.confirm($(this).data("confirm"))) {
+      e.preventDefault();
+    }
+  });
 
-      $signupForm.find("[required]").each(function () {
-        var $field = $(this);
-        var $row = $field.closest(".form-row");
-        var value = $.trim($field.val());
-        var fieldIsValid = value.length >= (parseInt($field.attr("minlength"), 10) || 0) && value.length > 0;
+  // ------------------------------------------------------------------------
+  // Flash messages: dismiss on click, success messages fade out on their own.
+  // ------------------------------------------------------------------------
+  $(document).on("click", ".flash-close", function () {
+    $(this).closest(".flash").fadeOut(200);
+  });
+  setTimeout(function () {
+    $(".flash-success").fadeOut(600);
+  }, 6000);
+});
 
-        $row.toggleClass("has-error", !fieldIsValid);
-        if (!fieldIsValid) {
-          isValid = false;
-        }
-      });
-
-      if ($password.val() !== $confirm.val()) {
-        $confirm.closest(".form-row").addClass("has-error");
-        isValid = false;
-      }
-
-      if (!isValid) {
-        e.preventDefault();
-      }
-    });
-
-    $signupForm.on("input", "input", function () {
-      $(this).closest(".form-row").removeClass("has-error");
-    });
-  }
-
-  // Login form validation — only runs on login.php.
-  var $loginForm = $("#loginForm");
-  if ($loginForm.length) {
-    $loginForm.on("submit", function (e) {
-      var isValid = true;
-
-      $loginForm.find("[required]").each(function () {
-        var $field = $(this);
-        var $row = $field.closest(".form-row");
-        var fieldIsValid = $.trim($field.val()).length > 0;
-
-        $row.toggleClass("has-error", !fieldIsValid);
-        if (!fieldIsValid) {
-          isValid = false;
-        }
-      });
-
-      if (!isValid) {
-        e.preventDefault();
-      }
-    });
-
-    $loginForm.on("input", "input", function () {
-      $(this).closest(".form-row").removeClass("has-error");
-    });
+// Admin photo fields: show a preview of the chosen file before saving.
+$(document).on("change", ".photo-input", function () {
+  var file = this.files && this.files[0];
+  var $preview = $(this).siblings(".photo-preview");
+  if (file && /^image\//.test(file.type)) {
+    $preview.attr("src", URL.createObjectURL(file)).prop("hidden", false);
+  } else {
+    $preview.prop("hidden", true);
   }
 });
+
+// Shared helper: format a number as pesos, e.g. 16380 -> "₱16,380.00".
+window.formatMoney = function (amount) {
+  return (
+    (window.RPN ? RPN.currency : "") +
+    Number(amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  );
+};

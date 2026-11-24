@@ -1,6 +1,21 @@
 <?php
-$pageTitle = "About Us | Romero's Party Needs";
-$activePage = "about";
+require_once 'includes/db.php';
+require_once 'includes/booking-functions.php';
+
+// Pulled live from the database, so anything the admin adds/edits in
+// Admin > Inventory or Admin > Services shows up here automatically.
+$categories = db_all($conn, "SELECT * FROM categories ORDER BY sort_order");
+$items = get_item_availability($conn, null);
+$services = get_service_availability($conn, null);
+
+$itemsByCategory = [];
+foreach ($items as $item) {
+    $itemsByCategory[$item['category_id']][] = $item;
+}
+
+$pageTitle = "Services & Rentals | Romero's Party Needs";
+$activePage = "services";
+$pageScripts = ['services.js'];
 require_once 'includes/header.php';
 ?>
 
@@ -10,71 +25,64 @@ require_once 'includes/header.php';
         <h1 class="page-title">Services &amp; rentals</h1>
         <p class="page-sub">
           Everything for the setup, and everyone to run the day. Mix and match,
-          or book it all in one call.
+          or book it all in one go.
         </p>
       </div>
     </header>
 
+    <section class="container">
+      <form class="date-check" id="dateCheck" onsubmit="return false;">
+        <label for="checkDate">Check availability for a date</label>
+        <input type="date" id="checkDate" min="<?php echo date('Y-m-d', strtotime('+' . MIN_LEAD_DAYS . ' days')); ?>" />
+        <span class="date-check-result" id="dateCheckResult" aria-live="polite"></span>
+      </form>
+    </section>
+
     <section class="offerings container">
       <h2 class="section-label">Party equipment rentals</h2>
-      <div class="offerings-row offerings-row--4">
-        <div class="offering">
-          <h3>Tables &amp; chairs</h3>
-          <p>
-            Round and rectangular tables with chairs to match, in quantities for
-            intimate gatherings or full receptions.
-          </p>
+
+      <?php foreach ($categories as $cat): if (empty($itemsByCategory[$cat['id']])) continue; ?>
+        <div class="rental-category">
+          <div class="rental-category-head">
+            <?php if ($cat['image']): ?>
+              <img src="<?php echo e($cat['image']); ?>" alt="<?php echo e($cat['name']); ?> by Romero's Party Needs" />
+            <?php endif; ?>
+            <div>
+              <h3><?php echo e($cat['name']); ?></h3>
+              <p><?php echo e($cat['description']); ?></p>
+            </div>
+          </div>
+          <ul class="price-list">
+            <?php foreach ($itemsByCategory[$cat['id']] as $item): ?>
+              <li data-item-id="<?php echo (int) $item['id']; ?>">
+                <span class="price-list-name">
+                  <?php if ($item['image']): ?><img class="price-list-thumb" src="<?php echo e($item['image']); ?>" alt="<?php echo e($item['name']); ?>" loading="lazy" /><?php endif; ?>
+                  <?php echo e($item['name']); ?>
+                  <small><?php echo e($item['description']); ?></small>
+                </span>
+                <span class="price-list-stock" data-total="<?php echo (int) $item['total_quantity']; ?>">
+                  <?php echo (int) $item['total_quantity']; ?> in inventory
+                </span>
+                <span class="price-list-price"><?php echo peso($item['price']); ?> <small>/ <?php echo e($item['unit']); ?></small></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
         </div>
-        <div class="offering">
-          <h3>Tents</h3>
-          <p>
-            Weatherproof tents in a range of sizes, set up and taken down by our
-            crew so you don't have to.
-          </p>
-        </div>
-        <div class="offering">
-          <h3>Signage</h3>
-          <p>
-            Custom welcome signs, seating charts, and directional signage
-            designed around your event.
-          </p>
-        </div>
-        <div class="offering">
-          <h3>Catering setups</h3>
-          <p>
-            Buffet tables, serving stations, and linens ready for your caterer
-            to plate and serve.
-          </p>
-        </div>
-      </div>
+      <?php endforeach; ?>
+      <p class="fine-print">
+        Rental prices are per event day. A flat <?php echo peso(DELIVERY_FEE); ?> delivery, setup and
+        pickup fee is added to bookings with rental items.
+      </p>
     </section>
 
     <section class="mini-gallery mini-gallery--tight container">
       <div class="mini-gallery-grid mini-gallery-grid--6">
-        <img
-          src="assets/img/rpn-tbch.jpg"
-          alt="Red and green Christmas party table setup"
-        />
-        <img
-          src="assets/img/rpn-tbch-2.jpg"
-          alt="Pink poolside reception seating"
-        />
-        <img
-          src="assets/img/rpn-tbch-3.jpg"
-          alt="Poolside patio table and chair setup"
-        />
-        <img
-          src="assets/img/rpn-tbch-5.jpg"
-          alt="Black and gold table setup on a patio"
-        />
-        <img
-          src="assets/img/rpn-bd.jpg"
-          alt="Catering table with pink skirting and chafing dish"
-        />
-        <img
-          src="assets/img/rpn-bd-2.jpg"
-          alt="70th birthday balloon backdrop"
-        />
+        <img src="assets/img/rpn-tbch.jpg" alt="Red and green Christmas party table setup" />
+        <img src="assets/img/rpn-tbch-2.jpg" alt="Pink poolside reception seating" />
+        <img src="assets/img/rpn-tbch-3.jpg" alt="Poolside patio table and chair setup" />
+        <img src="assets/img/rpn-tbch-5.jpg" alt="Black and gold table setup on a patio" />
+        <img src="assets/img/rpn-bd.jpg" alt="Catering table with pink skirting and chafing dish" />
+        <img src="assets/img/rpn-bd-2.jpg" alt="70th birthday balloon backdrop" />
       </div>
     </section>
 
@@ -83,51 +91,22 @@ require_once 'includes/header.php';
         <h2 class="section-label">Professional services</h2>
         <p class="partner-note">
           Hosting and event coordination is handled by
-          <a
-            href="https://www.facebook.com/southflaneurevents"
-            target="_blank"
-            rel="noopener"
-            >South Flaneur Events</a
-          >, our partner company run by family and close friends — booked
+          <a href="https://www.facebook.com/southflaneurevents" target="_blank" rel="noopener">South Flaneur Events</a>,
+          our partner company run by family and close friends — booked
           through us as one seamless package.
         </p>
         <div class="offerings-row offerings-row--3">
-          <div class="offering">
-            <img
-              class="offering-photo"
-              src="assets/img/sf-host-2.jpg"
-              alt="South Flaneur Events hosts on stage"
-            />
-            <h3>Event hosting</h3>
-            <p>
-              Hosts who keep the program on schedule and guests engaged, from
-              welcome to send-off.
-            </p>
-          </div>
-          <div class="offering">
-            <img
-              class="offering-photo"
-              src="assets/img/sf-org.jpg"
-              alt="South Flaneur Events coordinators with a newlywed couple"
-            />
-            <h3>Wedding organizers</h3>
-            <p>
-              Full-day coordination so you can be a guest at your own wedding,
-              not the one running it.
-            </p>
-          </div>
-          <div class="offering">
-            <img
-              class="offering-photo"
-              src="assets/img/sf-host.jpg"
-              alt="South Flaneur Events host engaging the crowd"
-            />
-            <h3>Party organizers</h3>
-            <p>
-              Planning and on-site coordination for birthdays, anniversaries,
-              and other celebrations.
-            </p>
-          </div>
+          <?php foreach ($services as $svc): ?>
+            <div class="offering" data-service-id="<?php echo (int) $svc['id']; ?>">
+              <?php if ($svc['image']): ?>
+                <img class="offering-photo" src="<?php echo e($svc['image']); ?>" alt="<?php echo e($svc['name']); ?>" />
+              <?php endif; ?>
+              <h3><?php echo e($svc['name']); ?></h3>
+              <p><?php echo e($svc['description']); ?></p>
+              <p class="offering-price"><?php echo peso($svc['price']); ?> <small>per event</small></p>
+              <span class="service-slot" aria-live="polite"></span>
+            </div>
+          <?php endforeach; ?>
         </div>
       </div>
     </section>
@@ -136,10 +115,10 @@ require_once 'includes/header.php';
       <div class="container cta-band-content">
         <h2>Ready to book?</h2>
         <p>
-          Tell us your date and headcount, and we'll put together a package that
-          fits.
+          Pick your date, choose your items and services, and see your total
+          before you submit.
         </p>
-        <a href="contact.html" class="btn-primary">Get in touch</a>
+        <a href="book.php" class="btn-primary">Book now</a>
       </div>
     </section>
 

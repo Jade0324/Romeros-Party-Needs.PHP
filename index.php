@@ -1,6 +1,7 @@
 <?php
-$pageTitle = "About Us | Romero's Party Needs";
-$activePage = "about";
+require_once 'includes/db.php';
+$pageTitle = "Romero's Party Needs | Party Rentals & Event Services";
+$activePage = "home";
 require_once 'includes/header.php';
 ?>
 
@@ -16,10 +17,8 @@ require_once 'includes/header.php';
             celebration needs.
           </p>
           <div class="hero-actions">
-            <a href="services.html" class="btn-primary"
-              >See rentals &amp; services</a
-            >
-            <a href="about.html" class="btn-ghost">Our story</a>
+            <a href="book.php" class="btn-primary">Book your event</a>
+            <a href="services.php" class="btn-ghost">See rentals &amp; prices</a>
           </div>
           <div class="hero-stats">
             <span class="stat-chip stat-chip--blue">10+ years</span>
@@ -104,6 +103,32 @@ require_once 'includes/header.php';
             src="assets/img/rpn-tbch-3.jpg"
             alt="Poolside patio seating setup"
           />
+        </div>
+      </div>
+    </section>
+
+<section class="how-it-works">
+      <div class="container">
+        <h2 class="section-label section-label--center">How booking works</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num">1</span>
+            <h3>Pick your date</h3>
+            <p>The calendar shows which dates are open. We need at least <?php echo MIN_LEAD_DAYS; ?> days' notice.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">2</span>
+            <h3>Choose what you need</h3>
+            <p>See exactly how many chairs, tables, tents and hosts are free on your date, with live pricing.</p>
+          </li>
+          <li class="step">
+            <span class="step-num">3</span>
+            <h3>We confirm &amp; set up</h3>
+            <p>We confirm your booking, schedule an ocular visit if needed, and our crew sets up before your event.</p>
+          </li>
+        </ol>
+        <div class="text-center">
+          <a href="book.php" class="btn-primary">Start a booking</a>
         </div>
       </div>
     </section>

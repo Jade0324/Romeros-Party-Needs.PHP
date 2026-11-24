@@ -1,0 +1,5 @@
+# Per-computer database settings (see includes/db.local.example.php)
+includes/db.local.php
+
+# Editor settings
+.vscode/
