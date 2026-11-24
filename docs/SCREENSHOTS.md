@@ -57,3 +57,11 @@ Owned vs booked vs free on any chosen date. Add/edit items with photos.
 
 ### 13. System check (for deployment)
 ![System check](screenshots/13-admin-system-check.jpg)
+
+### 15. Reports (v1.1)
+Headline numbers, booked value by month (hover a month for details), the same data as a table, top rental items, services and event types. Monthly summary and payments download as CSV.
+![Reports](screenshots/15-admin-reports.jpg)
+
+### 16. Bookings list with CSV export (v1.1)
+Filters, 50 bookings per page, and **Export CSV** for whatever the filters show.
+![Bookings with export](screenshots/16-admin-bookings-export.jpg)

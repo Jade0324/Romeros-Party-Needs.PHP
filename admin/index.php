@@ -10,7 +10,7 @@ $in30 = date('Y-m-d', strtotime('+30 days'));
 $stats = [
     'pending' => (int) db_value($conn, "SELECT COUNT(*) FROM bookings WHERE status = 'pending'"),
     'upcoming' => (int) db_value($conn, "SELECT COUNT(*) FROM bookings WHERE status IN ('pending','confirmed') AND event_date BETWEEN ? AND ?", "ss", [$today, $in30]),
-    'collected' => (float) db_value($conn, "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE DATE_FORMAT(paid_at, '%Y-%m') = ?", "s", [date('Y-m')]),
+    'collected' => (float) db_value($conn, "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE paid_at >= ? AND paid_at < ?", "ss", [date('Y-m-01'), date('Y-m-01', strtotime('first day of next month'))]),
     'outstanding' => (float) db_value(
         $conn,
         "SELECT COALESCE(SUM(b.total_amount - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.booking_id = b.id), 0)), 0)

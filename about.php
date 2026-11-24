@@ -61,11 +61,11 @@ require_once 'includes/header.php';
   <h2 class="section-label">Our partner in hosting</h2>
   <div class="partner-row">
     <div class="partner-photos">
-      <img
+      <img loading="lazy" decoding="async"
         src="assets/img/sf-org.jpg"
         alt="South Flaneur Events coordinators with a newlywed couple"
       />
-      <img
+      <img loading="lazy" decoding="async"
         src="assets/img/sf-host-2.jpg"
         alt="South Flaneur Events hosts on stage"
       />

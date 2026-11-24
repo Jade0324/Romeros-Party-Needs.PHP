@@ -11,3 +11,31 @@ Options -Indexes
         Deny from all
     </IfModule>
 </FilesMatch>
+
+# --------------------------------------------------------------------------
+# Speed: compress text files and let browsers cache images, CSS and JS.
+# CSS/JS links carry ?v=<last-modified time> (see asset() in
+# includes/functions.php), so a changed file is still picked up at once.
+# Each block only runs if the server has that module switched on (most
+# hosts do; XAMPP has mod_deflate and mod_expires off by default).
+# --------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css               "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript        "access plus 1 month"
+    ExpiresByType image/jpeg             "access plus 1 month"
+    ExpiresByType image/png              "access plus 1 month"
+    ExpiresByType image/webp             "access plus 1 month"
+    ExpiresByType image/svg+xml          "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|jpe?g|png|webp|svg)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>

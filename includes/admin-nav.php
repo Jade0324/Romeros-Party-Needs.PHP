@@ -13,6 +13,7 @@ $adminTabs = [
     'appointments' => ['Appointments', 'appointments.php', 0],
     'inquiries'    => ['Inquiries', 'inquiries.php', $newInquiryCount],
     'customers'    => ['Customers', 'customers.php', 0],
+    'reports'      => ['Reports', 'reports.php', 0],
     'users'        => ['Accounts', 'users.php', 0],
     'system'       => ['System', 'system.php', 0],
 ];

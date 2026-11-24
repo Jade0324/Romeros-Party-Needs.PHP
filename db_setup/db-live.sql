@@ -175,6 +175,7 @@ CREATE TABLE payments (
   notes        VARCHAR(255) NULL,
   paid_at      DATETIME NOT NULL,
   recorded_by  INT UNSIGNED NULL,
+  INDEX idx_pay_date (paid_at),
   CONSTRAINT fk_pay_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
   CONSTRAINT fk_pay_user    FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -223,6 +224,7 @@ CREATE TABLE inquiries (
   inquiry     TEXT NOT NULL,
   status      ENUM('new','replied','closed') NOT NULL DEFAULT 'new',
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_inq_status (status, created_at),
   CONSTRAINT fk_inq_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 

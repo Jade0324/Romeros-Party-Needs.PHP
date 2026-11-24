@@ -1806,9 +1806,15 @@ fieldset.panel > legend.panel-title + * {
   scrollbar-width: none;
 }
 
+/* On desktop, wrap onto a second row rather than hiding tabs off the edge
+   (phones keep the single swipeable row). */
+@media (min-width: 992px) {
+  .admin-tabs { flex-wrap: wrap; overflow-x: visible; }
+}
+
 .admin-tab {
   color: rgba(247, 241, 230, 0.8);
-  padding: 0.75rem 0.85rem;
+  padding: 0.75rem 0.7rem;
   font-size: 0.9rem;
   font-weight: 500;
   white-space: nowrap;
@@ -2325,4 +2331,226 @@ a.stat-card:hover {
 
 .nowrap {
   white-space: nowrap;
+}
+
+/* ==========================================================================
+   Admin: header actions, pagination, busy buttons
+   ========================================================================== */
+
+.admin-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-head-actions select {
+  border: 1px solid rgba(36, 31, 27, 0.25);
+  border-radius: 3px;
+  padding: 0.45rem 0.6rem;
+  background: #fffdf8;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.pager-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pager .btn-ghost {
+  padding: 0.4rem 0.2rem;
+}
+
+/* A submitted form's buttons, while the next page loads. */
+button.is-busy,
+.is-busy[type="submit"] {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+/* ==========================================================================
+   Admin: Reports. One series in the brand blue (a little more saturated
+   than --teal so it reads clearly as data). Columns are capped at 24px with
+   a 4px rounded top; the hover/focus tooltip covers the whole column slot.
+   ========================================================================== */
+
+.rpt-chart {
+  --rpt-bar: #2f6f9f;
+  --rpt-grid: #ece6d8;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 220px auto;
+  column-gap: 0.75rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.rpt-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 0.75rem;
+  color: rgba(38, 35, 32, 0.6);
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-0.5em);
+  margin-bottom: -1em;
+}
+
+.rpt-plot {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  align-items: end;
+  height: 100%;
+  border-bottom: 1px solid rgba(38, 35, 32, 0.35);
+  /* Recessive hairline gridlines at the top and middle of the scale. */
+  background:
+    linear-gradient(var(--rpt-grid), var(--rpt-grid)) top / 100% 1px no-repeat,
+    linear-gradient(var(--rpt-grid), var(--rpt-grid)) center / 100% 1px no-repeat;
+}
+
+.rpt-col {
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  outline: none;
+  cursor: default;
+}
+
+.rpt-col-bar {
+  display: block;
+  width: min(24px, 60%);
+  background: var(--rpt-bar);
+  border-radius: 4px 4px 0 0;
+  transition: filter 0.15s ease;
+}
+
+.rpt-col:hover .rpt-col-bar,
+.rpt-col:focus-visible .rpt-col-bar {
+  filter: brightness(0.85);
+}
+
+.rpt-col:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(47, 111, 159, 0.35);
+  border-radius: 4px;
+}
+
+.rpt-col-value {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -0.35rem);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.rpt-tip {
+  position: absolute;
+  bottom: 0.6rem; /* reports.php sets it just above each column's bar */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: none;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 170px;
+  padding: 0.55rem 0.7rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid #e4dccb;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(38, 35, 32, 0.14);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+
+.rpt-col:hover .rpt-tip,
+.rpt-col:focus-visible .rpt-tip {
+  display: flex;
+}
+
+/* Keep the tooltips of the first and last months inside the panel. */
+.rpt-col:nth-child(-n+2) .rpt-tip { left: 0; transform: none; }
+.rpt-col:nth-last-child(-n+2) .rpt-tip { left: auto; right: 0; transform: none; }
+
+.rpt-months {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(38, 35, 32, 0.6);
+  padding-top: 0.35rem;
+}
+
+.rpt-table-toggle summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--teal);
+  font-weight: 600;
+  margin: 0.75rem 0;
+}
+
+/* Horizontal bars inside the Top items table: thin bar, value at its tip. */
+.rpt-bar-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 180px;
+}
+
+.rpt-hbar-track {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+
+.rpt-hbar {
+  display: block;
+  height: 12px;
+  min-width: 2px;
+  background: var(--rpt-bar, #2f6f9f);
+  border-radius: 0 4px 4px 0;
+}
+
+.rpt-bars {
+  --rpt-bar: #2f6f9f;
+}
+
+.rpt-hbar-value {
+  font-size: 0.86rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rpt-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .rpt-chart { grid-template-rows: 180px auto; }
+  .rpt-months span:nth-child(even) { visibility: hidden; }
+  /* Phones: the figures matter more than the bars. */
+  .rpt-hbar-track { display: none; }
+  .rpt-bar-cell { min-width: 0; justify-content: flex-end; }
+  .rpt-bars th:last-child { text-align: right; }
+  .rpt-bars .hide-sm { display: none; }
+  .rpt-bars th, .rpt-bars td { padding: 0.65rem 0.5rem; }
+}
+
+@media print {
+  .admin-head-actions, .pager, .rpt-tip { display: none !important; }
 }

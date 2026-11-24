@@ -30,15 +30,41 @@ if ($q !== '') {
     array_push($params, $like, $like, $like, $like);
 }
 
-$sql = "SELECT b.*, u.full_name, u.email,
-               COALESCE((SELECT SUM(amount) FROM payments p WHERE p.booking_id = b.id), 0) AS paid
-        FROM bookings b JOIN users u ON u.id = b.user_id"
-     . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-     . " ORDER BY (b.status IN ('pending','confirmed') AND b.event_date >= CURDATE()) DESC,
-                  CASE WHEN b.event_date >= CURDATE() THEN b.event_date END ASC,
-                  b.event_date DESC
-        LIMIT 300";
-$bookings = db_all($conn, $sql, $types, $params);
+$fromSql = " FROM bookings b JOIN users u ON u.id = b.user_id" . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
+$orderSql = " ORDER BY (b.status IN ('pending','confirmed') AND b.event_date >= CURDATE()) DESC,
+                       CASE WHEN b.event_date >= CURDATE() THEN b.event_date END ASC,
+                       b.event_date DESC, b.id DESC";
+$selectSql = "SELECT b.*, u.full_name, u.email, u.phone,
+                     COALESCE((SELECT SUM(amount) FROM payments p WHERE p.booking_id = b.id), 0) AS paid" . $fromSql . $orderSql;
+
+// The filters currently in use, so links (pages, export) keep them.
+$filterQuery = array_filter(['status' => $status, 'view' => $view, 'q' => $q, 'from' => $from, 'to' => $to, 'user' => $userFilter ?: '']);
+
+// ---- Export: every booking matching the filters, as a spreadsheet ----------
+if (($_GET['export'] ?? '') === 'csv') {
+    $rows = [];
+    foreach (db_all($conn, $selectSql, $types, $params) as $b) {
+        $paid = (float) $b['paid'];
+        $rows[] = [
+            $b['reference'], $b['event_date'], substr($b['setup_time'], 0, 5), substr($b['event_start'], 0, 5), substr($b['event_end'], 0, 5),
+            $b['event_type'], (int) $b['guest_count'], $b['full_name'], $b['email'], $b['phone'], $b['venue_address'],
+            $b['status'], $b['items_total'], $b['services_total'], $b['delivery_fee'], $b['total_amount'],
+            number_format($paid, 2, '.', ''), number_format(max(0, (float) $b['total_amount'] - $paid), 2, '.', ''),
+            payment_status((float) $b['total_amount'], $paid), $b['created_at'],
+        ];
+    }
+    csv_download('bookings-' . today() . '.csv', [
+        'Reference', 'Event date', 'Setup', 'Start', 'End', 'Event type', 'Guests', 'Customer', 'Email', 'Phone', 'Venue',
+        'Status', 'Items total', 'Services total', 'Delivery fee', 'Total', 'Paid', 'Balance', 'Payment', 'Booked on',
+    ], $rows);
+}
+
+// ---- One page of results --------------------------------------------------
+$perPage = 50;
+$totalFound = (int) db_value($conn, "SELECT COUNT(*)" . $fromSql, $types, $params);
+$pages = max(1, (int) ceil($totalFound / $perPage));
+$page = min($pages, max(1, (int) ($_GET['page'] ?? 1)));
+$bookings = db_all($conn, $selectSql . " LIMIT $perPage OFFSET " . (($page - 1) * $perPage), $types, $params);
 
 $filteredCustomer = $userFilter ? db_one($conn, "SELECT full_name FROM users WHERE id = ?", "i", [$userFilter]) : null;
 
@@ -56,8 +82,13 @@ function filter_link(string $label, array $query, bool $active): string
 
 <section class="container admin-page">
   <div class="admin-head">
-    <h1 class="admin-title">Bookings<?php if ($filteredCustomer): ?> <span class="muted">for <?php echo e($filteredCustomer['full_name']); ?></span><?php endif; ?></h1>
-    <a class="btn-primary" href="<?php echo url('book.php'); ?>">+ New booking</a>
+    <h1 class="admin-title">Bookings<?php if ($filteredCustomer): ?> <span class="muted">for <?php echo e($filteredCustomer['full_name']); ?></span><?php endif; ?> <span class="muted">(<?php echo $totalFound; ?>)</span></h1>
+    <div class="admin-head-actions">
+      <?php if ($totalFound): ?>
+        <a class="btn-ghost" href="?<?php echo e(http_build_query(['export' => 'csv'] + $filterQuery)); ?>" title="Download the bookings shown (all pages) for Excel or Google Sheets">Export CSV</a>
+      <?php endif; ?>
+      <a class="btn-primary" href="<?php echo url('book.php'); ?>">+ New booking</a>
+    </div>
   </div>
 
   <div class="pill-row">
@@ -105,6 +136,7 @@ function filter_link(string $label, array $query, bool $active): string
       <p class="empty-state">No bookings match these filters.</p>
     <?php endif; ?>
   </div>
+  <?php echo pagination_links($page, $perPage, $totalFound, $filterQuery); ?>
 </section>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

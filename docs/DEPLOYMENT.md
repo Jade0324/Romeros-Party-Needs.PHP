@@ -55,7 +55,13 @@ Open **phpMyAdmin** from the hosting panel.
 1. On your computer, open `http://localhost/phpmyadmin` → click `romeros_party_db` → **Export** → *Quick*, format *SQL* → **Export**. You get a `.sql` file.
 2. On the host's phpMyAdmin, click **your database** → **Import** → choose that file.
 
-**Upgrading a database that's already live** (after pulling new code): don't re-import (that would erase it). Instead, import each new file in `db_setup/migrations/` in number order. Each file says at the top what it changes. A "Duplicate column" error means that migration was already applied.
+**Upgrading a database that's already live** (after pulling new code): don't re-import (that would erase it). Instead, import each new file in `db_setup/migrations/` in number order. Each file says at the top what it changes. A "Duplicate column" or "Duplicate key name" error means that migration was already applied.
+
+| Migration | Adds |
+|---|---|
+| `001_user_status_and_login_attempts.sql` | Account active/inactive, last login, login throttling table |
+| `002_inventory_item_photos.sql` | Photos for rental items |
+| `003_report_indexes.sql` | Indexes that keep the dashboard and Reports fast (data unchanged) |
 
 ## Step 4: Upload the files
 
@@ -100,7 +106,11 @@ In the hosting panel, find **SSL/TLS** and install the free certificate. HTTPS e
 1. Open your site. The home page should load.
 2. Log in as `admin@romerospartyneeds.com` / `admin123`.
 3. Go to **Admin → System**. It checks PHP, the database, tables, uploads, protection files, HTTPS and passwords.
-4. Fix anything red, then refresh until **0 problems** shows.
+4. Fix anything red, then refresh until **0 problems** shows. Two yellow warnings are worth fixing but not required:
+   * **Indexes missing:** import `db_setup/migrations/003_report_indexes.sql` (only if the database came from an older `db.sql`).
+   * **gd (optional) not enabled:** uploaded photos are kept at full size. Most hosts have GD on. Where it's a choice, enable it (cPanel → *Select PHP Version* → tick `gd`) so big phone photos are shrunk automatically.
+
+   Compression and browser caching in `.htaccess` switch on by themselves when the host supports them; nothing to configure.
 5. **Change the admin password immediately:** Admin → Accounts → Edit → *Reset password*. Better still, create a personal admin account for each family member, then deactivate the demo admin.
 
 ## Step 9: Going live with real customers (optional)

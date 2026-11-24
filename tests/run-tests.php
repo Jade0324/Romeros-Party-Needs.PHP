@@ -32,6 +32,7 @@ $base = rtrim($urlArg ?? 'http://localhost/' . basename(dirname(__DIR__)), '/') 
 
 $_SERVER['SCRIPT_NAME'] = '/tests/run-tests.php';
 require __DIR__ . '/../includes/db.php';
+require __DIR__ . '/../includes/booking-functions.php';
 
 // --------------------------------------------------------------------------
 // Tiny test framework
@@ -83,6 +84,8 @@ final class Browser
     public int $status = 0;
     public string $body = '';
     public string $location = '';
+    /** Response headers of the last request, lower-cased names. */
+    public array $headers = [];
     private string $jar;
 
     public function __construct(private string $base)
@@ -119,6 +122,11 @@ final class Browser
         return str_contains($this->body, $text);
     }
 
+    public function header(string $name): string
+    {
+        return $this->headers[strtolower($name)] ?? '';
+    }
+
     public function phpErrors(): bool
     {
         return (bool) preg_match('/(Fatal error|Warning|Notice|Deprecated|Uncaught)\s*<\/b>?:/i', $this->body)
@@ -148,7 +156,15 @@ final class Browser
             CURLOPT_COOKIEFILE => $this->jar,
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_TIMEOUT => 30,
+            CURLOPT_HEADERFUNCTION => function ($ch, string $line): int {
+                if (str_contains($line, ':')) {
+                    [$k, $v] = explode(':', $line, 2);
+                    $this->headers[strtolower(trim($k))] = trim($v);
+                }
+                return strlen($line);
+            },
         ]);
+        $this->headers = [];
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             if ($files) {
@@ -304,7 +320,7 @@ $admin->login('admin@romerospartyneeds.com', 'admin123');
 test('admin login goes to the dashboard', str_contains($admin->location, 'admin/index.php'));
 foreach (['admin/index.php', 'admin/bookings.php', 'admin/bookings.php?status=pending&q=maria', 'admin/booking.php?id=2',
           'admin/calendar.php', "admin/calendar.php?day=$D6", 'admin/inventory.php', 'admin/categories.php', 'admin/services.php',
-          'admin/appointments.php?view=all', 'admin/inquiries.php', 'admin/customers.php', 'admin/users.php', 'admin/system.php', 'book.php'] as $p) {
+          'admin/appointments.php?view=all', 'admin/inquiries.php', 'admin/customers.php', 'admin/users.php', 'admin/system.php', 'admin/reports.php', 'book.php'] as $p) {
     $admin->get($p);
     test("admin can open $p", $admin->status === 200 && !$admin->phpErrors());
 }
@@ -358,6 +374,96 @@ test('unblock date', (json_decode($g->get('api/calendar.php?month=' . substr($D3
 
 $admin->post('book.php', array_merge($form, ['customer_id' => 3, 'event_type' => 'Reunion', 'event_date' => day(40), 'items' => [1 => 40, 7 => 2]]));
 test('admin books on behalf of a customer', str_contains($admin->location, 'admin/booking.php?id=') && (int) q("SELECT user_id FROM bookings WHERE event_type = 'Reunion'") === 3);
+
+// ==========================================================================
+section('Reports, exports, speed & hardening (v1.1)');
+
+// The faster availability query must give exactly the same numbers as the
+// plain "add up every booking" way of counting, for every item and service.
+$fresh = get_item_availability($conn, $D6);
+$mismatch = [];
+foreach ($fresh as $id => $row) {
+    $plain = (int) q("SELECT COALESCE(SUM(bi.quantity), 0) FROM booking_items bi JOIN bookings b ON b.id = bi.booking_id
+                      WHERE bi.item_id = ? AND b.event_date = ? AND b.status IN ('pending','confirmed')", "is", [$id, $D6]);
+    if ($plain !== $row['reserved']) $mismatch[] = $row['name'];
+}
+test('optimized item availability matches a plain count for every item', !$mismatch && count($fresh) > 0, implode(', ', $mismatch));
+$mismatch = [];
+foreach (get_service_availability($conn, $D6) as $id => $row) {
+    $plain = (int) q("SELECT COUNT(*) FROM booking_services bs JOIN bookings b ON b.id = bs.booking_id
+                      WHERE bs.service_id = ? AND b.event_date = ? AND b.status IN ('pending','confirmed')", "is", [$id, $D6]);
+    if ($plain !== $row['used']) $mismatch[] = $row['name'];
+}
+test('optimized service availability matches a plain count for every service', !$mismatch, implode(', ', $mismatch));
+$excluded = get_item_availability($conn, $D6, 1); // booking 1 (Juan's, 40 Monobloc chairs) left out
+test('excluding a booking frees exactly its items', $excluded[1]['reserved'] === $fresh[1]['reserved'] - (int) q("SELECT COALESCE(SUM(quantity), 0) FROM booking_items WHERE booking_id = 1 AND item_id = 1"));
+
+$g->get('index.php');
+test('security headers sent (nosniff, frame protection, referrer policy)',
+    $g->header('X-Content-Type-Options') === 'nosniff' && $g->header('X-Frame-Options') === 'SAMEORIGIN' && $g->header('Referrer-Policy') !== '');
+test('CSS/JS links carry a version so browsers can cache them safely', (bool) preg_match('/style\.css\?v=\d+/', $g->body) && (bool) preg_match('/script\.js\?v=\d+/', $g->body));
+test('favicon is linked and served', $g->has('favicon.svg') && (new Browser($base))->get('assets/img/favicon.svg')->status === 200);
+$g->get("api/availability.php?date=$D6");
+test('availability API is never cached', str_contains($g->header('Cache-Control'), 'no-store'));
+$g->post('contact.php', ['contact_submit' => 1, 'name' => 'x', 'email' => 'x@x.com', 'message' => 'hi'], [], false);
+test('expired form shows a friendly page (not a bare message)', $g->status === 400 && $g->has('This form has expired') && $g->has('site-nav'));
+$admin->get('admin/bookings.php?q[]=x&status[]=y');
+test('hand-edited URL with array values does not crash', $admin->status === 200 && !$admin->phpErrors());
+$admin->get('admin/calendar.php?month=2026-13');
+test('invalid calendar month falls back to this month', $admin->status === 200 && $admin->has(date('F Y')) && !$admin->has('1970'));
+
+// CSV export of the bookings list (respects the filters).
+$admin->get('admin/bookings.php?export=csv');
+$lines = array_values(array_filter(explode("\n", trim($admin->body))));
+test('bookings export is a CSV download', str_starts_with($admin->header('Content-Type'), 'text/csv') && str_contains($admin->header('Content-Disposition'), 'bookings-'));
+test('bookings export has a header row + one row per booking', count($lines) === 1 + (int) q("SELECT COUNT(*) FROM bookings") && str_contains($admin->body, 'RPN-7K2M9Q'));
+$admin->get('admin/bookings.php?export=csv&status=pending');
+test('bookings export respects the status filter', count(array_filter(explode("\n", trim($admin->body)))) === 1 + (int) q("SELECT COUNT(*) FROM bookings WHERE status = 'pending'"));
+test('CSV cells that look like formulas are neutralised', csv_safe('=HYPERLINK("x")') === "'=HYPERLINK(\"x\")" && csv_safe('-500.00') === '-500.00' && csv_safe('Maria') === 'Maria');
+
+// Pagination: add 60 extra (completed, past) bookings, then remove them.
+db_exec($conn, "INSERT INTO bookings (reference, user_id, event_type, event_date, setup_time, event_start, event_end, venue_address, guest_count, items_total, services_total, delivery_fee, total_amount, status)
+                SELECT CONCAT('RPN-PG', LPAD(seq, 4, '0')), 2, 'Birthday', DATE_SUB(CURDATE(), INTERVAL seq DAY), '08:00', '12:00', '17:00', 'Paging test', 10, 0, 0, 0, 0, 'completed'
+                FROM (SELECT a.n * 10 + b.n + 1 AS seq FROM
+                      (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) a,
+                      (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b) s");
+$totalB = (int) q("SELECT COUNT(*) FROM bookings");
+$admin->get('admin/bookings.php');
+test('bookings list shows 50 per page with a pager', substr_count($admin->body, 'booking.php?id=') === 50 && $admin->has("Showing 1–50 of $totalB"));
+$admin->get('admin/bookings.php?page=2');
+test('page 2 shows the rest', substr_count($admin->body, 'booking.php?id=') === $totalB - 50 && $admin->has('Page 2 of 2'));
+$admin->get('admin/bookings.php?page=99');
+test('a page number past the end shows the last page', $admin->status === 200 && $admin->has('Page 2 of 2'));
+db_exec($conn, "DELETE FROM bookings WHERE reference LIKE 'RPN-PG%'");
+
+// Reports page numbers come straight from the database.
+$year = (int) date('Y');
+$expectValue = (float) q("SELECT COALESCE(SUM(total_amount), 0) FROM bookings WHERE status <> 'cancelled' AND YEAR(event_date) = ?", "i", [$year]);
+$expectPaid = (float) q("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE YEAR(paid_at) = ?", "i", [$year]);
+$admin->get("admin/reports.php?year=$year");
+test('reports: booked value for the year matches the bookings', $admin->has('>' . peso($expectValue) . '<'));
+test('reports: collected for the year matches the payments', $admin->has('>' . peso($expectPaid) . '<'));
+test('reports: Tiffany chair listed among top items', $admin->has('Tiffany chair'));
+test('reports tab in the admin menu', $admin->has('admin/reports.php'));
+$admin->get("admin/reports.php?year=$year&export=monthly");
+test('monthly summary CSV: header + 12 months + total', count(array_filter(explode("\n", trim($admin->body)))) === 14);
+$admin->get("admin/reports.php?year=$year&export=payments");
+test('payments CSV lists every payment of the year', count(array_filter(explode("\n", trim($admin->body)))) === 1 + (int) q("SELECT COUNT(*) FROM payments WHERE YEAR(paid_at) = ?", "i", [$year]));
+$admin->get('admin/reports.php?year=1999');
+test('reports: unknown year falls back to this year', $admin->status === 200 && $admin->has("Reports <span class=\"muted\">$year</span>"));
+
+// Uploaded photos are scaled down (only where PHP's GD extension is on).
+if (function_exists('imagecreatetruecolor')) {
+    $big = tempnam(sys_get_temp_dir(), 'big') . '.jpg';
+    imagejpeg(imagecreatetruecolor(2400, 1200), $big);
+    $shrunk = shrink_image($big, 'image/jpeg');
+    [$bw, $bh] = getimagesize($big);
+    test('large photos are scaled down to 1600px (keeping the shape)', $shrunk && $bw === 1600 && $bh === 800);
+    test('small photos are left alone', !shrink_image($png, 'image/png'));
+    @unlink($big);
+} else {
+    echo "  \033[33mSKIP\033[0m  photo resizing (PHP GD extension not enabled for the CLI; run with -d extension=gd to include it)\n";
+}
 
 // ==========================================================================
 section('Accounts & roles (WBS 1.4.4 / 1.2.1)');

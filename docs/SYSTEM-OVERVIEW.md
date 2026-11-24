@@ -297,6 +297,8 @@ Index `idx_booking_date_status (event_date, status)` makes availability checks f
 
 Payment status is derived (not stored): **unpaid** (0), **partial** (< total), **paid** (≥ total).
 
+Index `idx_pay_date (paid_at)` keeps the dashboard's "collected this month" and the Reports page fast.
+
 ### `booking_logs`: timeline / audit trail
 | Column | Type | Rules | Description |
 |---|---|---|---|
@@ -340,6 +342,8 @@ Payment status is derived (not stored): **unpaid** (0), **partial** (< total), *
 | inquiry | TEXT | required | Message |
 | status | ENUM('new','replied','closed') | default new | |
 | created_at | TIMESTAMP | auto | |
+
+Index `idx_inq_status (status, created_at)` serves the "new inquiries" counts and lists.
 
 ### `login_attempts`: failed logins (brute-force protection)
 | Column | Type | Rules | Description |
@@ -402,10 +406,11 @@ Inquiries: `new → replied → closed` (any can be reopened).
 | `api/calendar.php?month=YYYY-MM` | public | JSON: open/limited/full/blocked per day |
 | `api/slots.php?date=` | public | JSON: free appointment times |
 | `admin/index.php` | admin | Dashboard |
-| `admin/bookings.php`, `admin/booking.php?id=` | admin | Bookings list and full management |
+| `admin/bookings.php`, `admin/booking.php?id=` | admin | Bookings list (50 per page, `?export=csv` downloads the filtered list) and full management |
 | `admin/calendar.php?day=` | admin | Month calendar, day plan, truck load list, blocked dates |
 | `admin/inventory.php`, `admin/categories.php`, `admin/services.php` | admin | Catalog and stock management |
 | `admin/appointments.php`, `admin/inquiries.php`, `admin/customers.php` | admin | Lists and status updates |
+| `admin/reports.php?year=` | admin | Yearly report: booked value vs. collected by month, top items, services, event types; `&export=monthly` / `&export=payments` download CSVs |
 | `admin/users.php` | admin | Account and role management |
 | `admin/system.php` | admin | Deployment / health check |
 
@@ -425,3 +430,20 @@ Inquiries: `new → replied → closed` (any can be reopened).
 | Malicious uploads | MIME checked from file contents (`finfo`) + `getimagesize`, size limit, random names, and scripts can never execute in `assets/uploads/` |
 | Information leaks on live site | `$app_env = "production"` hides PHP errors and connection details from visitors |
 | Open redirects | `?next=` after login only accepts paths inside the site |
+| Content sniffing, click-jacking, referrer leaks | Every page sends `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` |
+| Unexpected errors | A global exception handler logs the error and shows a friendly 500 page (details only in development) |
+| Duplicate submissions | Forms ignore a second click while the first submit is on its way |
+| Malformed URLs | Array values in the query string are dropped before any page reads them |
+| CSV / spreadsheet injection | Exported cells starting with `= + - @` are prefixed with `'` so Excel treats them as text |
+
+## 11. Performance
+
+| Technique | Where |
+|---|---|
+| Availability computed with one grouped pass over the date's active bookings (via `idx_booking_date_status`), joined to the item/service list, instead of one sub-query per item | `get_item_availability()`, `get_service_availability()` |
+| Indexes on every column the dashboard, calendar and Reports filter by: booking date + status, appointment slot, payment date, inquiry status | `db_setup/db.sql`, migration 003 |
+| Date filters written as ranges (`paid_at >= ? AND paid_at < ?`) so indexes can be used | `admin/index.php`, `admin/reports.php` |
+| JSON endpoints release the session lock immediately, so the booking page's calendar and availability requests run in parallel; responses are `no-store` | `api/*.php` |
+| Versioned CSS/JS (`?v=<mtime>`) + 30-day browser caching + gzip where the server supports it | `asset()`, `.htaccess` |
+| Site photos at ≤ 1200 px, progressive JPEG; uploads scaled to ≤ 1600 px when GD is available; below-the-fold images lazy-loaded | `assets/img/`, `shrink_image()` |
+| Long lists paginated (bookings: 50 per page) | `pagination_links()` |

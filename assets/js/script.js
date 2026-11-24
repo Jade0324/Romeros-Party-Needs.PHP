@@ -73,6 +73,35 @@ $(document).ready(function () {
   });
 
   // ------------------------------------------------------------------------
+  // Double-submit guard: once a form is really on its way (validation and
+  // "are you sure?" passed), ignore further clicks so a double-click can't
+  // create two bookings or record a payment twice. The buttons are disabled
+  // a tick later, after the browser has already read the clicked button's
+  // name/value. Re-enabled after a few seconds in case the request stalls.
+  // ------------------------------------------------------------------------
+  $(document).on("submit", "form", function (e) {
+    if (e.isDefaultPrevented()) {
+      return;
+    }
+    var $form = $(this);
+    if ($form.data("submitting")) {
+      e.preventDefault();
+      return;
+    }
+    $form.data("submitting", true);
+    setTimeout(function () {
+      $form.find("[type=submit]").prop("disabled", true).addClass("is-busy");
+    }, 0);
+    setTimeout(function () {
+      $form.data("submitting", false).find("[type=submit]").prop("disabled", false).removeClass("is-busy");
+    }, 8000);
+  });
+  // Coming back with the browser's Back button: make the forms usable again.
+  $(window).on("pageshow", function () {
+    $("form").data("submitting", false).find("[type=submit]").prop("disabled", false).removeClass("is-busy");
+  });
+
+  // ------------------------------------------------------------------------
   // Flash messages: dismiss on click, success messages fade out on their own.
   // ------------------------------------------------------------------------
   $(document).on("click", ".flash-close", function () {

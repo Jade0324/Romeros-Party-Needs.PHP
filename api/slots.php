@@ -5,6 +5,11 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/booking-functions.php';
 
 header('Content-Type: application/json');
+// Always fresh (stock changes as people book), and release the session lock
+// right away: this endpoint only reads the session, so the page's other
+// requests don't have to wait for it.
+header('Cache-Control: no-store');
+session_write_close();
 
 $date = clean_date($_GET['date'] ?? '');
 $error = appointment_date_error($conn, $date);

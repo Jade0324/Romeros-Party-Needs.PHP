@@ -37,6 +37,9 @@ define('LOGIN_LOCK_MINUTES', 15);
 // Uploaded photos (categories, items, services).
 define('UPLOAD_DIR', 'assets/uploads/');
 define('UPLOAD_MAX_BYTES', 2 * 1024 * 1024);
+// Bigger photos are scaled down to this many pixels on the longest side
+// (only when the server has PHP's GD image extension).
+define('UPLOAD_MAX_SIDE', 1600);
 
 // Customers can cancel online up to this many days before the event.
 define('CANCEL_CUTOFF_DAYS', 3);

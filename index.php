@@ -46,7 +46,7 @@ require_once 'includes/header.php';
     <section class="offerings container">
       <div class="offerings-row">
         <div class="offering">
-          <img
+          <img loading="lazy" decoding="async"
             class="offering-photo"
             src="assets/img/rpn-tbch-5.jpg"
             alt="Table and chair rental setup by Romero's Party Needs"
@@ -58,7 +58,7 @@ require_once 'includes/header.php';
           </p>
         </div>
         <div class="offering">
-          <img
+          <img loading="lazy" decoding="async"
             class="offering-photo"
             src="assets/img/sf-host.jpg"
             alt="Event host on stage at a party"
@@ -70,7 +70,7 @@ require_once 'includes/header.php';
           </p>
         </div>
         <div class="offering">
-          <img
+          <img loading="lazy" decoding="async"
             class="offering-photo"
             src="assets/img/sf-org.jpg"
             alt="Event organizers with a newlywed couple"
@@ -88,19 +88,19 @@ require_once 'includes/header.php';
       <div class="container">
         <h2 class="section-label section-label--center">A few recent setups</h2>
         <div class="mini-gallery-grid">
-          <img
+          <img loading="lazy" decoding="async"
             src="assets/img/rpn-bd-2.jpg"
             alt="Birthday backdrop and balloon decor"
           />
-          <img
+          <img loading="lazy" decoding="async"
             src="assets/img/rpn-tbch-2.jpg"
             alt="Poolside reception seating in pink"
           />
-          <img
+          <img loading="lazy" decoding="async"
             src="assets/img/rpn-tbch.jpg"
             alt="Christmas party table setup in red and green"
           />
-          <img
+          <img loading="lazy" decoding="async"
             src="assets/img/rpn-tbch-3.jpg"
             alt="Poolside patio seating setup"
           />

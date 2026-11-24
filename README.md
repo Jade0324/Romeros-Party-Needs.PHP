@@ -12,6 +12,7 @@ A PHP and MySQL web application for **Romero's Party Needs**, featuring party eq
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Putting the site on a live web host, migrating the database, final testing |
 | [docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) | Every WBS / Kanban work package → where it's built → how it was verified |
 | [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) | UI screenshots of every main screen |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | **Progress log**: what changed in each version, why, and how it was tested |
 
 ## Tech Stack
 * **Frontend:** HTML5, CSS3, Bootstrap 5, jQuery (AJAX for live availability)
@@ -35,11 +36,12 @@ A PHP and MySQL web application for **Romero's Party Needs**, featuring party eq
 | Page | What it does |
 |---|---|
 | Dashboard | Bookings to confirm, upcoming events, money collected/outstanding, this week's setup schedule, appointments, low-stock warnings, new inquiries. |
-| Bookings | Search/filter all bookings. On a booking: confirm / complete / cancel / restore, record payments, reschedule, edit items, internal notes. |
+| Bookings | Search/filter all bookings (50 per page), **export to CSV**. On a booking: confirm / complete / cancel / restore, record payments, reschedule, edit items, internal notes. |
 | Calendar | Month view of setups and appointments. Click a day for the **day plan + truck load list**. Block/unblock dates. |
 | Inventory & Categories | Add/edit rental items and categories with photos; see reserved vs. free stock on any date. |
 | Services | Add/edit services (with photos) and how many events each team can cover per day. |
 | Appointments / Inquiries / Customers | Manage each list; everything links back to the related bookings. |
+| Reports | Booked value vs. money collected by month, top rental items, services, event types. Monthly summary and payments **CSV downloads**. |
 | Accounts | Create accounts, change roles, reset passwords, deactivate/reactivate users. |
 | System | Health check for installs and live deployments: PHP, database, schema, uploads, security. |
 
@@ -89,7 +91,7 @@ With Apache and MySQL running:
 ```
 C:\xampp\php\php.exe tests\run-tests.php --reset
 ```
-Runs 101 end-to-end checks as a guest, customers and an admin: stock limits, fully booked services, edits, payments, roles, uploads, access guards. It **resets the database to the demo data** before and after, so never point it at a live site.
+Runs 126 end-to-end checks as a guest, customers and an admin: stock limits, fully booked services, edits, payments, roles, uploads, access guards, reports and exports. (Add `-d extension=gd` after `php.exe` to include the 2 photo-resizing checks.) It **resets the database to the demo data** before and after, so never point it at a live site.
 
 ## Demo Accounts
 
@@ -121,7 +123,7 @@ Prices and quantities are placeholders. Update them in **Admin → Inventory** a
 ├── index.php, services.php, about.php, contact.php     Public pages
 ├── book.php, booking.php, appointment.php, account.php Customer pages (login required)
 ├── login.php, signup.php, logout.php
-├── admin/                 Admin back office (admin role required), incl. users.php, categories.php, system.php
+├── admin/                 Admin back office (admin role required), incl. reports.php, users.php, categories.php, system.php
 ├── api/                   JSON endpoints used by jQuery
 │   ├── availability.php   Free stock + service slots for a date
 │   ├── calendar.php       Open/limited/full status for each day of a month
@@ -142,7 +144,7 @@ Prices and quantities are placeholders. Update them in **Admin → Inventory** a
 │   ├── migrations/        Upgrade an existing database without losing data
 │   └── clear-demo-data.sql  Remove demo bookings/customers before going live
 ├── tests/run-tests.php    Automated end-to-end tests
-└── docs/                  System overview/ERD, deployment, project status, screenshots
+└── docs/                  System overview/ERD, deployment, project status, changelog, screenshots
 ```
 
 ## Database Tables
@@ -154,3 +156,9 @@ Prices and quantities are placeholders. Update them in **Admin → Inventory** a
 * **"Database connection failed"**: MySQL isn't started, the port in `db.php` is wrong, or `db.sql` hasn't been imported.
 * **XAMPP says "MySQL shutdown unexpectedly"**: XAMPP's data folder is corrupted (common after a crash or forced shutdown). Stop MySQL, rename `C:\xampp\mysql\data` to `data_old` (your backup), copy `C:\xampp\mysql\backup` to a new `data` folder, start MySQL, and re-import `db.sql`.
 * **Something looks wrong after setup**: log in as admin and open **Admin → System**. It lists exactly what's missing.
+
+## Performance notes
+* Availability is calculated with one grouped query per date (see `includes/booking-functions.php`), backed by indexes on booking dates, payment dates and inquiry status.
+* CSS/JS links are versioned (`style.css?v=…`), and `.htaccess` turns on compression and 30-day browser caching where the server supports it.
+* Uploaded photos are scaled down to 1600 px automatically when PHP's GD extension is enabled.
+* Details and before/after numbers: [docs/CHANGELOG.md](docs/CHANGELOG.md).

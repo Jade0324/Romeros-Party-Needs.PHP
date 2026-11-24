@@ -62,18 +62,22 @@ function event_date_error(mysqli $conn, ?string $date, int $excludeBookingId = 0
  */
 function get_item_availability(mysqli $conn, ?string $date, int $excludeBookingId = 0, bool $activeOnly = true): array
 {
+    // The date's active bookings are found once (via the event_date index)
+    // and summed per item, then joined to the item list. Faster than running
+    // a separate subquery for every item.
     $sql = "SELECT i.*, c.name AS category_name, c.slug AS category_slug,
-                   COALESCE((
-                       SELECT SUM(bi.quantity)
-                       FROM booking_items bi
-                       JOIN bookings b ON b.id = bi.booking_id
-                       WHERE bi.item_id = i.id
-                         AND b.event_date = ?
-                         AND b.status IN " . ACTIVE_STATUSES_SQL . "
-                         AND b.id <> ?
-                   ), 0) AS reserved
+                   COALESCE(r.reserved, 0) AS reserved
             FROM inventory_items i
             JOIN categories c ON c.id = i.category_id
+            LEFT JOIN (
+                SELECT bi.item_id, SUM(bi.quantity) AS reserved
+                FROM bookings b
+                JOIN booking_items bi ON bi.booking_id = b.id
+                WHERE b.event_date = ?
+                  AND b.status IN " . ACTIVE_STATUSES_SQL . "
+                  AND b.id <> ?
+                GROUP BY bi.item_id
+            ) r ON r.item_id = i.id
             " . ($activeOnly ? "WHERE i.is_active = 1" : "") . "
             ORDER BY c.sort_order, i.id";
 
@@ -92,15 +96,17 @@ function get_item_availability(mysqli $conn, ?string $date, int $excludeBookingI
  */
 function get_service_availability(mysqli $conn, ?string $date, int $excludeBookingId = 0, bool $activeOnly = true): array
 {
-    $sql = "SELECT s.*,
-                   (SELECT COUNT(*)
-                    FROM booking_services bs
-                    JOIN bookings b ON b.id = bs.booking_id
-                    WHERE bs.service_id = s.id
-                      AND b.event_date = ?
-                      AND b.status IN " . ACTIVE_STATUSES_SQL . "
-                      AND b.id <> ?) AS used
+    $sql = "SELECT s.*, COALESCE(u.used, 0) AS used
             FROM services s
+            LEFT JOIN (
+                SELECT bs.service_id, COUNT(*) AS used
+                FROM bookings b
+                JOIN booking_services bs ON bs.booking_id = b.id
+                WHERE b.event_date = ?
+                  AND b.status IN " . ACTIVE_STATUSES_SQL . "
+                  AND b.id <> ?
+                GROUP BY bs.service_id
+            ) u ON u.service_id = s.id
             " . ($activeOnly ? "WHERE s.is_active = 1" : "") . "
             ORDER BY s.price";
 

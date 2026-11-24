@@ -20,6 +20,8 @@ check('Server', 'PHP version', version_compare(PHP_VERSION, '8.0.0', '>=') ? 'ok
 foreach (['mysqli' => 'database access', 'fileinfo' => 'checking uploaded photos', 'mbstring' => 'text handling', 'json' => 'availability API'] as $ext => $why) {
     check('Server', "PHP extension: $ext", extension_loaded($ext) ? 'ok' : 'fail', $why);
 }
+check('Server', 'PHP extension: gd (optional)', extension_loaded('gd') ? 'ok' : 'warn',
+    extension_loaded('gd') ? 'Large uploaded photos are scaled down automatically' : 'Not enabled: uploaded photos are kept at full size. Enable extension=gd in php.ini to shrink them.');
 check('Server', 'Upload size limit', 'ok', 'upload_max_filesize = ' . ini_get('upload_max_filesize') . ', post_max_size = ' . ini_get('post_max_size'));
 check('Server', 'Time zone', date_default_timezone_get() === 'Asia/Manila' ? 'ok' : 'warn', date_default_timezone_get() . ' · server time ' . date('M j, Y g:i A'));
 
@@ -49,6 +51,16 @@ foreach ($required as $table => $cols) {
 }
 check('Database', 'Schema up to date', $missingCols ? 'fail' : 'ok',
     $missingCols ? 'Missing columns: ' . implode(', ', $missingCols) . '. Run the files in db_setup/migrations/.' : 'All columns used by the app exist');
+
+// Indexes keep the dashboard and Reports fast as bookings pile up.
+$wantIndexes = ['bookings' => 'idx_booking_date_status', 'payments' => 'idx_pay_date', 'inquiries' => 'idx_inq_status', 'appointments' => 'idx_appt_slot'];
+$missingIdx = [];
+foreach ($wantIndexes as $table => $index) {
+    $has = db_value($conn, "SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?", "ss", [$table, $index]);
+    if (!$has) $missingIdx[] = "$table.$index";
+}
+check('Database', 'Indexes', $missingIdx ? 'warn' : 'ok',
+    $missingIdx ? 'Missing: ' . implode(', ', $missingIdx) . '. Everything works, but run db_setup/migrations/003_report_indexes.sql to keep pages fast.' : count($wantIndexes) . ' of ' . count($wantIndexes) . ' performance indexes present');
 
 $counts = [];
 foreach (['users', 'inventory_items', 'services', 'bookings', 'appointments', 'payments', 'inquiries'] as $t) {

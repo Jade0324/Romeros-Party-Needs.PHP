@@ -6,6 +6,11 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/booking-functions.php';
 
 header('Content-Type: application/json');
+// Always fresh (stock changes as people book), and release the session lock
+// right away: this endpoint only reads the session, so the page's other
+// requests don't have to wait for it.
+header('Cache-Control: no-store');
+session_write_close();
 
 $month = $_GET['month'] ?? date('Y-m');
 if (!preg_match('/^(\d{4})-(\d{2})$/', $month, $m) || !checkdate((int) $m[2], 1, (int) $m[1])) {

@@ -3,7 +3,7 @@
 This page maps every work package on the project's WBS / Kanban board to **what was built**, **where it lives**, and **how it was verified**. Use it to move cards and to back up the final report.
 
 **Verification key**
-* **Auto:** covered by `tests/run-tests.php` (101 automated checks, all passing as of Nov 24, 2026).
+* **Auto:** covered by `tests/run-tests.php` (126 automated checks, all passing as of Nov 24, 2026; 128 with PHP's GD extension on). What changed in each version: [CHANGELOG.md](CHANGELOG.md).
 * **Shot:** screenshot in [`docs/screenshots/`](screenshots/) (see [SCREENSHOTS.md](SCREENSHOTS.md)).
 * **Manual:** item in the checklist in [GETTING-STARTED.md](../GETTING-STARTED.md#full-test-checklist).
 
@@ -41,17 +41,17 @@ This page maps every work package on the project's WBS / Kanban board to **what 
 
 | WBS | Deliverable | Where | Verified |
 |---|---|---|---|
-| **1.4.1** Admin Overview Dashboard (#14) | Bookings to confirm, events in 30 days, money collected this month, outstanding balance, new inquiries, 7-day setup schedule, appointments this week, low-stock watch | `admin/index.php` | Auto (page loads) · Shot 08 |
+| **1.4.1** Admin Overview Dashboard (#14) | Bookings to confirm, events in 30 days, money collected this month, outstanding balance, new inquiries, 7-day setup schedule, appointments this week, low-stock watch. **v1.1:** Reports page (monthly booked vs. collected, top items, services, event types, CSV downloads) | `admin/index.php`, `admin/reports.php` | Auto (page loads; report totals match the database; both CSVs) · Shot 08, 15 |
 | **1.4.2** Services & Rentals Management (#15) | Inventory CRUD with photo upload and reserved-vs-free per date (can't go below what's booked); categories CRUD; services CRUD with daily team capacity; hide/show without breaking old bookings | `admin/inventory.php`, `admin/categories.php`, `admin/services.php`, `includes/photo-field.php` | Auto: inventory guard, item + photo, category + photo, fake-image rejection, uploads can't run scripts · Shot 11 |
-| **1.4.3** Bookings & Inquiries Management | Search/filter bookings; confirm / complete / cancel / restore; record payments (no overpaying); reschedule with stock re-check; edit items; internal notes; month calendar with day plan + truck load list; block dates; appointments; inquiries with reply/close | `admin/bookings.php`, `admin/booking.php`, `admin/calendar.php`, `admin/appointments.php`, `admin/inquiries.php`, `admin/customers.php` | Auto: confirm, overpay refused, payment → partial, reschedule refused/allowed, restore, day-plan totals, block/unblock · Shot 09, 10 |
+| **1.4.3** Bookings & Inquiries Management | Search/filter bookings (paged, **CSV export**); confirm / complete / cancel / restore; record payments (no overpaying); reschedule with stock re-check; edit items; internal notes; month calendar with day plan + truck load list; block dates; appointments; inquiries with reply/close | `admin/bookings.php`, `admin/booking.php`, `admin/calendar.php`, `admin/appointments.php`, `admin/inquiries.php`, `admin/customers.php` | Auto: CSV export + filter, pagination, confirm, overpay refused, payment → partial, reschedule refused/allowed, restore, day-plan totals, block/unblock · Shot 09, 10 |
 | **1.4.4** User Account & Role Management | Create accounts, change roles, reset passwords, deactivate/reactivate, delete accounts with no history; can't demote/deactivate yourself or remove the last admin; changes apply immediately | `admin/users.php` | Auto: section "Accounts & roles" (11 checks) · Shot 12 |
 
 ## 1.5 Live Hosting Deployment & Quality Assurance (Kanban #18)
 
 | WBS | Deliverable | Where | Verified |
 |---|---|---|---|
-| **1.5.1** Live Server Database Setup & Migration | Hosting-safe SQL file, numbered migrations for upgrading a live database without losing data, per-server settings file (`db.local.php`), production mode that hides errors, step-by-step guide | `db_setup/db-live.sql`, `db_setup/migrations/`, `includes/db.local.example.php`, [DEPLOYMENT.md](DEPLOYMENT.md) | `db-live.sql` imported into a differently-named database (13 tables) |
-| **1.5.2** Website Deployment & Final Testing | Automated end-to-end test suite; Admin → System health check for the live server; live testing checklist | `tests/run-tests.php`, `admin/system.php`, [DEPLOYMENT.md §10](DEPLOYMENT.md#step-10-final-testing-on-the-live-site) | Auto: 101/101 passing locally · Shot 13. **Live run pending the hosting account.** |
+| **1.5.1** Live Server Database Setup & Migration | Hosting-safe SQL file, numbered migrations (001–003) for upgrading a live database without losing data, per-server settings file (`db.local.php`), production mode that hides errors, step-by-step guide | `db_setup/db-live.sql`, `db_setup/migrations/`, `includes/db.local.example.php`, [DEPLOYMENT.md](DEPLOYMENT.md) | `db-live.sql` imported into a differently-named database (13 tables) |
+| **1.5.2** Website Deployment & Final Testing | Automated end-to-end test suite; Admin → System health check for the live server; live testing checklist | `tests/run-tests.php`, `admin/system.php`, [DEPLOYMENT.md §10](DEPLOYMENT.md#step-10-final-testing-on-the-live-site) | Auto: 126/126 passing locally · Shot 13. **Live run pending the hosting account.** |
 
 ## 1.6 Project Documentation & Final Presentation (Kanban #21)
 

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Romero's Party Needs: a party tent in the brand blue with a marigold flag. -->
+  <rect width="64" height="64" rx="14" fill="#3e6e8e"/>
+  <path d="M32 14 L52 36 H12 Z" fill="#faf7ef"/>
+  <path d="M18 36 V50 M46 36 V50" stroke="#faf7ef" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 14 V6" stroke="#faf7ef" stroke-width="3" stroke-linecap="round"/>
+  <path d="M32 6 L42 9 L32 12 Z" fill="#e0a83d"/>
+  <path d="M12 36 Q22 44 32 36 Q42 44 52 36" fill="#c1544b"/>
+</svg>

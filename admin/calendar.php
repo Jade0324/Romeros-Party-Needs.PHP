@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ---- Which month / day to show -----------------------------------------
 $day = clean_date($_GET['day'] ?? '') ?: null;
 $month = $_GET['month'] ?? ($day ? substr($day, 0, 7) : date('Y-m'));
-if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+if (!is_string($month) || !preg_match('/^(\d{4})-(\d{2})$/', $month, $mm) || !checkdate((int) $mm[2], 1, (int) $mm[1])) {
     $month = date('Y-m');
 }
 $first = $month . '-01';

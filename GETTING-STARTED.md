@@ -64,7 +64,7 @@ If you see the home page with the **Book now** button, you're done. 🎉
 
 ### Step 6 (optional): Check everything automatically
 * Log in as the admin (below) and open **Admin → System**. It should say **0 problems**.
-* Or run the automated test suite (101 checks, about 30 seconds) from a terminal in the project folder:
+* Or run the automated test suite (126 checks, about 30 seconds) from a terminal in the project folder:
   ```
   C:\xampp\php\php.exe tests\run-tests.php --reset
   ```
@@ -137,6 +137,9 @@ Use this to check that every feature works. Each line says what to do → what s
 - [ ] Services → change "Events per day" for a team → the booking form respects the new limit
 - [ ] Appointments / Inquiries → mark done / replied / closed
 - [ ] Customers → see each customer's number of bookings and total paid; click a name to see their bookings
+- [ ] Bookings → filter by *Pending* → **Export CSV** → the file opens in Excel/Sheets with only the pending bookings
+- [ ] Reports → numbers match the bookings and payments; hover a month in the chart; **Show as a table**; download both CSVs
+- [ ] Double-click **Submit booking** / **Record payment** → only one booking / payment is saved
 - [ ] **Book now** as admin → you can choose which customer the booking is for (walk-in / phone orders)
 - [ ] Accounts → create a customer account → they can log in
 - [ ] Accounts → **Deactivate** that account → if they're logged in, they're signed out on their next click and can't log back in
@@ -190,6 +193,7 @@ The XAMPP dashboard is still at <http://localhost/dashboard/>.
 | Change the booking form behaviour (calendar, live totals) | `book.php` + `assets/js/booking.js` |
 | Change the look | `assets/css/style.css` (colours are variables at the top) |
 | Understand the whole system (ERD, data dictionary, flows) | [docs/SYSTEM-OVERVIEW.md](docs/SYSTEM-OVERVIEW.md) |
+| See what changed recently and why | [docs/CHANGELOG.md](docs/CHANGELOG.md) |
 | See what each WBS work package delivered | [docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md) |
 
 Questions or found a bug? Open an issue on the GitHub repository or message the group.

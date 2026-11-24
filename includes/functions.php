@@ -17,6 +17,42 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// No page uses array values in the URL (?q[]=x). Dropping them means every
+// $_GET value is plain text, so a hand-edited link can't crash trim() etc.
+$_GET = array_filter($_GET, 'is_string');
+
+// Basic browser security headers on every page:
+//  - nosniff: the browser must trust our Content-Type (no guessing a photo is a script)
+//  - SAMEORIGIN: other sites can't load our pages in a frame (clickjacking)
+//  - Referrer-Policy: don't leak full URLs (e.g. booking references) to other sites
+//  - Permissions-Policy: we never need the camera, microphone or location
+if (PHP_SAPI !== 'cli' && !headers_sent()) {
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
+// Anything that crashes unexpectedly (a database error, a bug) gets logged
+// and shows a friendly "something went wrong" page instead of a raw PHP
+// error. In development the technical message is shown too, for debugging.
+if (PHP_SAPI !== 'cli') {
+    set_exception_handler(function (Throwable $ex): void {
+        error_log('Uncaught ' . get_class($ex) . ': ' . $ex->getMessage() . ' in ' . $ex->getFile() . ':' . $ex->getLine());
+        $detail = APP_ENV === 'production' ? '' : ' (' . $ex->getMessage() . ')';
+        // Throw away whatever half of the page was already buffered, so the
+        // error page isn't printed in the middle of a broken layout.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (headers_sent()) {
+            echo '<div class="flash flash-error container">Something went wrong on our side. Please try again.' . e($detail) . '</div>';
+            return;
+        }
+        render_error_page(500, 'Something went wrong', 'Sorry, we couldn\'t finish that request. Please try again in a moment.' . $detail);
+    });
+}
+
 // Log people out after a long period of inactivity.
 if (isset($_SESSION['user_id'], $_SESSION['last_seen']) && time() - $_SESSION['last_seen'] > SESSION_IDLE_MINUTES * 60) {
     $_SESSION = [];
@@ -77,6 +113,17 @@ function url(string $path = ''): string
     return BASE_URL . ltrim($path, '/');
 }
 
+/**
+ * Link to a CSS/JS file with its last-modified time attached
+ * (style.css?v=1732430000). Browsers can then cache the file for a long time,
+ * yet still download the new version as soon as it changes.
+ */
+function asset(string $path): string
+{
+    $file = __DIR__ . '/../' . ltrim($path, '/');
+    return url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+}
+
 function redirect(string $path): void
 {
     header('Location: ' . url($path));
@@ -120,8 +167,7 @@ function csrf_valid(): bool
 function require_csrf(): void
 {
     if (!csrf_valid()) {
-        http_response_code(400);
-        die('Your session expired or the form was invalid. Please go back, refresh the page, and try again.');
+        render_error_page(400, 'This form has expired', 'Your session expired or the form was opened too long ago. Please go back, refresh the page, and try again.');
     }
 }
 
@@ -280,6 +326,62 @@ function db_exec(mysqli $conn, string $sql, string $types = '', array $params = 
 }
 
 // --------------------------------------------------------------------------
+// CSV downloads (admin exports, opened in Excel / Google Sheets)
+// --------------------------------------------------------------------------
+
+/**
+ * Send rows as a CSV file download and stop.
+ *   csv_download('bookings.csv', ['Reference', 'Total'], [['RPN-1', 500], ...]);
+ */
+function csv_download(string $filename, array $headings, iterable $rows): void
+{
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', $filename) . '"');
+    header('Cache-Control: no-store');
+    $out = fopen('php://output', 'w');
+    fwrite($out, "\xEF\xBB\xBF"); // tells Excel the file is UTF-8 (names like "Peñaflor")
+    fputcsv($out, $headings);
+    foreach ($rows as $row) {
+        fputcsv($out, array_map('csv_safe', array_values($row)));
+    }
+    fclose($out);
+    exit;
+}
+
+/**
+ * Text a customer typed could start with "=", "+", "-" or "@", which Excel
+ * would run as a formula. Prefixing an apostrophe makes it plain text.
+ * Numbers are left alone so they still add up in the spreadsheet.
+ */
+function csv_safe(mixed $value): string
+{
+    $value = (string) ($value ?? '');
+    if ($value !== '' && !is_numeric($value) && preg_match('/^[=+\-@\t\r]/', $value)) {
+        return "'" . $value;
+    }
+    return $value;
+}
+
+/** "Showing 51–100 of 230" plus Previous / Next links that keep the current filters. */
+function pagination_links(int $page, int $perPage, int $total, array $query = []): string
+{
+    if ($total <= $perPage) {
+        return '';
+    }
+    $pages = (int) ceil($total / $perPage);
+    $from = ($page - 1) * $perPage + 1;
+    $to = min($total, $page * $perPage);
+    $link = fn(int $p, string $label) => '<a class="btn-ghost" href="?' . e(http_build_query(['page' => $p] + $query)) . '">' . $label . '</a>';
+    return '<nav class="pager" aria-label="Pages">'
+        . '<span class="muted small">Showing ' . $from . '–' . $to . ' of ' . $total . '</span>'
+        . '<span class="pager-links">'
+        . ($page > 1 ? $link($page - 1, '&larr; Previous') : '')
+        . ' <span class="small">Page ' . $page . ' of ' . $pages . '</span> '
+        . ($page < $pages ? $link($page + 1, 'Next &rarr;') : '')
+        . '</span></nav>';
+}
+
+// --------------------------------------------------------------------------
 // Photo uploads (admin: categories, rental items, services)
 // --------------------------------------------------------------------------
 
@@ -318,7 +420,51 @@ function save_uploaded_image(string $field): array
     if (!move_uploaded_file($file['tmp_name'], $dir . $name)) {
         return ['error' => 'The uploads folder is not writable.'];
     }
+    shrink_image($dir . $name, $mime);
     return ['path' => UPLOAD_DIR . $name];
+}
+
+/**
+ * Scale a photo down so its longest side is at most UPLOAD_MAX_SIDE pixels.
+ * A phone photo straight from the camera (4000px, 3-5 MB) becomes a few
+ * hundred KB, so the Services page and booking form load quickly.
+ * Needs PHP's GD extension; without it the photo is simply kept as it is.
+ * Returns true if the file was made smaller.
+ */
+function shrink_image(string $path, string $mime, int $maxSide = UPLOAD_MAX_SIDE): bool
+{
+    $loaders = ['image/jpeg' => 'imagecreatefromjpeg', 'image/png' => 'imagecreatefrompng', 'image/webp' => 'imagecreatefromwebp'];
+    $loader = $loaders[$mime] ?? null;
+    if (!$loader || !function_exists($loader) || !function_exists('imagecreatetruecolor')) {
+        return false;
+    }
+    $info = @getimagesize($path);
+    if (!$info || max($info[0], $info[1]) <= $maxSide) {
+        return false;
+    }
+    [$w, $h] = $info;
+    $scale = $maxSide / max($w, $h);
+    $nw = max(1, (int) round($w * $scale));
+    $nh = max(1, (int) round($h * $scale));
+
+    $src = @$loader($path);
+    if (!$src) {
+        return false;
+    }
+    $dst = imagecreatetruecolor($nw, $nh);
+    if ($mime !== 'image/jpeg') {
+        // Keep transparent backgrounds transparent (PNG / WebP logos).
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+    }
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+    $ok = match ($mime) {
+        'image/jpeg' => imagejpeg($dst, $path, 82),
+        'image/png' => imagepng($dst, $path, 6),
+        'image/webp' => imagewebp($dst, $path, 82),
+    };
+    return (bool) $ok;
 }
 
 /** Delete a photo we uploaded earlier (never touches the built-in assets/img). */

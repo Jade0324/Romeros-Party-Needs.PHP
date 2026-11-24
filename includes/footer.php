@@ -15,9 +15,9 @@
   </script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="<?php echo url('assets/js/script.js'); ?>"></script>
+  <script src="<?php echo asset('assets/js/script.js'); ?>"></script>
   <?php foreach (($pageScripts ?? []) as $script): ?>
-    <script src="<?php echo url('assets/js/' . $script); ?>"></script>
+    <script src="<?php echo asset('assets/js/' . $script); ?>"></script>
   <?php endforeach; ?>
 </body>
 </html>

@@ -77,12 +77,12 @@ require_once 'includes/header.php';
 
     <section class="mini-gallery mini-gallery--tight container">
       <div class="mini-gallery-grid mini-gallery-grid--6">
-        <img src="assets/img/rpn-tbch.jpg" alt="Red and green Christmas party table setup" />
-        <img src="assets/img/rpn-tbch-2.jpg" alt="Pink poolside reception seating" />
-        <img src="assets/img/rpn-tbch-3.jpg" alt="Poolside patio table and chair setup" />
-        <img src="assets/img/rpn-tbch-5.jpg" alt="Black and gold table setup on a patio" />
-        <img src="assets/img/rpn-bd.jpg" alt="Catering table with pink skirting and chafing dish" />
-        <img src="assets/img/rpn-bd-2.jpg" alt="70th birthday balloon backdrop" />
+        <img loading="lazy" decoding="async" src="assets/img/rpn-tbch.jpg" alt="Red and green Christmas party table setup" />
+        <img loading="lazy" decoding="async" src="assets/img/rpn-tbch-2.jpg" alt="Pink poolside reception seating" />
+        <img loading="lazy" decoding="async" src="assets/img/rpn-tbch-3.jpg" alt="Poolside patio table and chair setup" />
+        <img loading="lazy" decoding="async" src="assets/img/rpn-tbch-5.jpg" alt="Black and gold table setup on a patio" />
+        <img loading="lazy" decoding="async" src="assets/img/rpn-bd.jpg" alt="Catering table with pink skirting and chafing dish" />
+        <img loading="lazy" decoding="async" src="assets/img/rpn-bd-2.jpg" alt="70th birthday balloon backdrop" />
       </div>
     </section>
 
@@ -99,7 +99,7 @@ require_once 'includes/header.php';
           <?php foreach ($services as $svc): ?>
             <div class="offering" data-service-id="<?php echo (int) $svc['id']; ?>">
               <?php if ($svc['image']): ?>
-                <img class="offering-photo" src="<?php echo e($svc['image']); ?>" alt="<?php echo e($svc['name']); ?>" />
+                <img loading="lazy" decoding="async" class="offering-photo" src="<?php echo e($svc['image']); ?>" alt="<?php echo e($svc['name']); ?>" />
               <?php endif; ?>
               <h3><?php echo e($svc['name']); ?></h3>
               <p><?php echo e($svc['description']); ?></p>
