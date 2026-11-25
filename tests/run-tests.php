@@ -10,9 +10,15 @@
 //   C:\xampp\php\php.exe tests\run-tests.php --reset
 //   C:\xampp\php\php.exe tests\run-tests.php --reset http://localhost/Romeros-Party-Needs.PHP/
 //
-// --reset is required because the tests create bookings, accounts, etc. The
-// database is reset to the demo data from db_setup/db.sql BEFORE and AFTER
-// the run. Never run this against a live site with real customer data.
+// What happens to your data:
+//   1. The whole database is BACKED UP to tests/backups/ (the run stops if
+//      the backup fails).
+//   2. The tests run on a fresh copy of the demo data (db_setup/db.sql).
+//   3. Your backed-up data is RESTORED exactly as it was, even if a test
+//      crashes. The backup file is kept, so it can also be imported by hand
+//      in phpMyAdmin if the run is interrupted with Ctrl+C.
+// --reset is still required, as a reminder that the database is replaced
+// while the tests run. Never run this against a live site.
 // ==========================================================================
 
 if (PHP_SAPI !== 'cli') {
@@ -24,7 +30,8 @@ if (!extension_loaded('curl')) {
 
 $args = array_slice($argv, 1);
 if (!in_array('--reset', $args, true)) {
-    exit("These tests RESET the database to the demo data (db_setup/db.sql).\n"
+    exit("While these tests run, the database is replaced by the demo data (db_setup/db.sql).\n"
+        . "Your data is backed up first and put back afterwards.\n"
         . "Run again with --reset to confirm:  php tests/run-tests.php --reset\n");
 }
 $urlArg = array_values(array_filter($args, fn($a) => str_starts_with($a, 'http')))[0] ?? null;
@@ -73,6 +80,49 @@ function reset_database(mysqli $conn): void
     } while (mysqli_more_results($conn) && mysqli_next_result($conn));
     mysqli_select_db($conn, $GLOBALS['db_name']);
 }
+/**
+ * Save the whole database to tests/backups/before-tests-<time>.sql using
+ * mysqldump, BEFORE the tests touch anything. Returns the file path, or
+ * stops the run if the backup can't be made (so nothing is ever lost).
+ */
+function backup_database(): string
+{
+    global $db_host, $db_user, $db_pass, $db_name, $db_port;
+    $candidates = [dirname(PHP_BINARY) . '/../mysql/bin/mysqldump.exe', 'C:/xampp/mysql/bin/mysqldump.exe', '/opt/lampp/bin/mysqldump'];
+    $dump = 'mysqldump'; // fall back to whatever is on the PATH
+    foreach ($candidates as $c) {
+        if (is_file($c)) { $dump = $c; break; }
+    }
+    $dir = __DIR__ . '/backups';
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    $file = $dir . '/before-tests-' . date('Y-m-d_His') . '.sql';
+
+    $cmd = escapeshellarg($dump)
+        . ' --protocol=TCP --host=' . escapeshellarg($db_host) . ' --port=' . (int) $db_port
+        . ' --user=' . escapeshellarg($db_user) . ($db_pass !== '' ? ' --password=' . escapeshellarg($db_pass) : '')
+        . ' --single-transaction --routines --default-character-set=utf8mb4'
+        . ' --result-file=' . escapeshellarg($file) . ' ' . escapeshellarg($db_name) . ' 2>&1';
+    exec($cmd, $output, $code);
+    $content = is_file($file) ? file_get_contents($file) : '';
+    if ($code !== 0 || !str_contains($content, 'Dump completed')) {
+        @unlink($file);
+        exit("Could not back up the database, so the tests were NOT run and nothing was changed.\n"
+            . "mysqldump said: " . trim(implode("\n", $output)) . "\n");
+    }
+    return $file;
+}
+
+/** Put the backed-up database back exactly as it was before the tests. */
+function restore_database(mysqli $conn, string $file): bool
+{
+    mysqli_select_db($conn, $GLOBALS['db_name']);
+    $ok = mysqli_multi_query($conn, file_get_contents($file));
+    do {
+        if ($r = mysqli_store_result($conn)) mysqli_free_result($r);
+    } while (mysqli_more_results($conn) && mysqli_next_result($conn));
+    return $ok && mysqli_errno($conn) === 0;
+}
+
 function q(string $sql, string $types = '', array $params = [])
 {
     return db_value($GLOBALS['conn'], $sql, $types, $params);
@@ -190,8 +240,19 @@ $probe = new Browser($base);
 if ($probe->get('index.php')->status !== 200) {
     exit("Could not open {$base}index.php (HTTP {$probe->status}). Is Apache running and is the URL right?\n");
 }
+$backupFile = backup_database();
+echo "Your database was backed up to tests/backups/" . basename($backupFile) . "\n";
+$restored = false;
+// Even if a test crashes half-way, put the real data back.
+register_shutdown_function(function () use ($backupFile, &$restored) {
+    if (!$restored) {
+        $ok = restore_database($GLOBALS['conn'], $backupFile);
+        echo $ok ? "\nRun stopped early; your data was restored from the backup.\n"
+                 : "\nRun stopped early and the restore FAILED. Import tests/backups/" . basename($backupFile) . " in phpMyAdmin.\n";
+    }
+});
 reset_database($conn);
-echo "Database reset to demo data.\n";
+echo "Tests are using a fresh copy of the demo data.\n";
 // Remember which photos already exist so only the test's uploads get removed.
 $uploadsBefore = glob(__DIR__ . '/../' . UPLOAD_DIR . '*') ?: [];
 
@@ -507,7 +568,7 @@ test('login locked after ' . LOGIN_MAX_ATTEMPTS . ' wrong passwords (even with t
 db_exec($conn, "DELETE FROM login_attempts");
 
 // ==========================================================================
-reset_database($conn);
+$restored = restore_database($conn, $backupFile);
 @unlink($png);
 @unlink($fake);
 foreach (array_diff(glob(__DIR__ . '/../' . UPLOAD_DIR . '*') ?: [], $uploadsBefore) as $f) {
@@ -519,5 +580,7 @@ echo "\n" . ($failed ? "\033[31m" : "\033[32m") . "$passed of $total passed\033[
 if ($failed) {
     echo "Failed:\n  - " . implode("\n  - ", $failed) . "\n";
 }
-echo "Database reset to demo data again.\n";
-exit($failed ? 1 : 0);
+echo $restored
+    ? "Your data was restored exactly as it was before the tests (backup kept in tests/backups/).\n"
+    : "\033[31mRestoring your data FAILED.\033[0m Import tests/backups/" . basename($backupFile) . " in phpMyAdmin to get it back.\n";
+exit($failed || !$restored ? 1 : 0);

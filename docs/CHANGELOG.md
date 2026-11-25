@@ -4,6 +4,22 @@ What changed in the system, when, and why. Newest first. Each entry lists what w
 
 ---
 
+## v1.1.1 — Tests no longer erase your data (Nov 25, 2026)
+
+**What went wrong:** the test runner used to reset the database to the demo data before *and after* every run. On Nov 24, an account and a booking entered by hand in the browser (13:07–13:09) were erased by the test runs at 13:29 and 23:11–23:24. MySQL's change log is off in XAMPP, so they couldn't be recovered.
+
+**Fix** (`tests/run-tests.php`):
+1. Before touching anything, the whole database is saved with `mysqldump` to `tests/backups/before-tests-<date_time>.sql`. If the backup fails, the run stops and nothing is changed.
+2. The tests run on a fresh copy of the demo data, as before.
+3. Afterwards the backup is restored, so the database is exactly as it was. This also happens if a test crashes half-way (shutdown handler). The backup file is kept, so an interrupted run (Ctrl+C) can be undone by importing it in phpMyAdmin.
+4. `tests/backups/` is git-ignored (it contains real data) and already blocked from the web by `tests/.htaccess`.
+
+**Verified:** added a marker account, took a checksum of all 13 tables, ran the full suite (126/126 passed), and the checksums were identical afterwards with the marker account still there.
+
+**Also seen on Nov 25:** XAMPP's MySQL stopped twice (closing the window that started it ends the process). While it's stopped, every page shows the "Database connection failed" page; that's why two logins that morning got an error. Start MySQL from the XAMPP Control Panel and keep the panel open, or leave it running in the background.
+
+---
+
 ## v1.1 — Optimization, reports & hardening (Nov 24, 2026)
 
 Branch: `romerojohndavidbranch` · Tests: **126 of 126 passing** (128 of 128 with PHP's GD extension on) · No new PHP warnings in the Apache log.

@@ -122,7 +122,7 @@ When the class demo is over and real customers will use it:
 
 ## Step 10: Final testing on the live site
 
-⚠️ **Never run `tests/run-tests.php` against the live site.** It resets the database.
+⚠️ **Never run `tests/run-tests.php` against the live site.** It swaps the database for demo data while it runs (it restores the original afterwards, but real customers would see the demo data in the meantime).
 
 Instead, go through the checklist in [GETTING-STARTED.md](../GETTING-STARTED.md#full-test-checklist) on the live link, on both a computer and a phone. At minimum:
 

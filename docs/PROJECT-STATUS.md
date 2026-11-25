@@ -68,4 +68,4 @@ This page maps every work package on the project's WBS / Kanban board to **what 
 C:\xampp\php\php.exe tests\run-tests.php --reset
 ```
 
-The suite opens the real site over HTTP as a guest, two customers and an admin. It resets the database to the demo data before and after. It prints one PASS/FAIL line per rule, grouped by WBS package.
+The suite opens the real site over HTTP as a guest, two customers and an admin. It backs up the database, runs on a fresh copy of the demo data, then restores the backed-up data exactly as it was. It prints one PASS/FAIL line per rule, grouped by WBS package.

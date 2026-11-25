@@ -68,7 +68,7 @@ If you see the home page with the **Book now** button, you're done. 🎉
   ```
   C:\xampp\php\php.exe tests\run-tests.php --reset
   ```
-  It **resets the database to the demo data** before and after, so don't run it if you've entered data you want to keep.
+  It backs up your database to `tests/backups/` first, runs on a fresh copy of the demo data, then **puts your own data back exactly as it was**. If a run is ever interrupted (Ctrl+C), import the newest file from `tests/backups/` in phpMyAdmin to get your data back.
 
 ---
 

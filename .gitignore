@@ -3,3 +3,6 @@ includes/db.local.php
 
 # Editor settings
 .vscode/
+
+# Database backups made by tests/run-tests.php (contain real data)
+tests/backups/

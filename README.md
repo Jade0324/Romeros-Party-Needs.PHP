@@ -91,7 +91,7 @@ With Apache and MySQL running:
 ```
 C:\xampp\php\php.exe tests\run-tests.php --reset
 ```
-Runs 126 end-to-end checks as a guest, customers and an admin: stock limits, fully booked services, edits, payments, roles, uploads, access guards, reports and exports. (Add `-d extension=gd` after `php.exe` to include the 2 photo-resizing checks.) It **resets the database to the demo data** before and after, so never point it at a live site.
+Runs 126 end-to-end checks as a guest, customers and an admin: stock limits, fully booked services, edits, payments, roles, uploads, access guards, reports and exports. (Add `-d extension=gd` after `php.exe` to include the 2 photo-resizing checks.) While it runs, the tests use a fresh copy of the demo data. **Your own data is backed up first** (to `tests/backups/`, git-ignored) and **restored exactly as it was** afterwards. Never point it at a live site.
 
 ## Demo Accounts
 
